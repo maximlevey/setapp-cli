@@ -28,6 +28,7 @@ class CommandTestCase: XCTestCase {
         Dependencies.detector = MockAppDetector()
         Printer.isVerbose = false
         Printer.isDebug = false
+        Dependencies.verifyEnvironment = { /* no-op in tests */ }
     }
 
     override func tearDown() {

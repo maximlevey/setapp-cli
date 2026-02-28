@@ -14,10 +14,14 @@ enum Dependencies {
     /// App installation detector.
     static var detector: AppDetecting = LiveDetector()
 
+    /// Environment readiness check. Replaced with a no-op in tests.
+    static var verifyEnvironment: () throws -> Void = SetappEnvironment.verify
+
     /// Reset all dependencies to their live defaults.
     static func reset() {
         lookup = LiveDatabase()
         installer = LiveInstaller()
         detector = LiveDetector()
+        verifyEnvironment = SetappEnvironment.verify
     }
 }
