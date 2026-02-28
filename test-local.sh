@@ -67,3 +67,46 @@ if "$CLI" --help 2>&1 | grep -q "SUBCOMMANDS"; then
 else
     fail "--help shows subcommands"
 fi
+
+# --- list ---
+LIST_OUT=$("$CLI" list 2>&1) || true
+if echo "$LIST_OUT" | grep -q "Proxyman\|CleanMyMac\|CleanShot"; then
+    pass "list shows installed apps"
+else
+    fail "list shows installed apps"
+fi
+
+# --- check ---
+if "$CLI" check >/dev/null 2>&1; then
+    pass "check exits 0"
+else
+    fail "check exits 0"
+fi
+
+# --- dump --list ---
+DUMP_LIST=$("$CLI" dump --list 2>&1) || true
+if echo "$DUMP_LIST" | grep -q "Proxyman\|CleanMyMac\|CleanShot"; then
+    pass "dump --list prints installed app names"
+else
+    fail "dump --list prints installed app names"
+fi
+
+# --- dump --file ---
+BUNDLE_TMP="$TMPDIR_TEST/test-bundle"
+if "$CLI" dump --file "$BUNDLE_TMP" >/dev/null 2>&1; then
+    pass "dump --file exits 0"
+else
+    fail "dump --file exits 0"
+fi
+
+if grep -q "^# setapp bundle" "$BUNDLE_TMP" 2>/dev/null; then
+    pass "dump --file writes header comment"
+else
+    fail "dump --file writes header comment"
+fi
+
+if grep -qi "proxyman\|cleanmymac\|cleanshot" "$BUNDLE_TMP" 2>/dev/null; then
+    pass "dump --file contains app names"
+else
+    fail "dump --file contains app names"
+fi
