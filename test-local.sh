@@ -95,7 +95,7 @@ run_read_only_tests() {
   printf '%s==> Tier 1: Read-only tests%s\n' "${BOLD}" "${RESET}"
 
   # --- Binary basics ---
-  if "${CLI}" --version 2>&1 | grep -q '2.0.0'; then
+  if "${CLI}" --version 2>&1 | grep -q '2.1.0'; then
     pass '--version prints version'
   else
     fail '--version prints version'
@@ -122,35 +122,35 @@ run_read_only_tests() {
     fail 'check exits 0'
   fi
 
-  # --- dump --list ---
-  dump_list=$("${CLI}" dump --list 2>&1) || true
+  # --- bundle dump --list ---
+  dump_list=$("${CLI}" bundle dump --list 2>&1) || true
   if echo "${dump_list}" | grep -q 'Proxyman\|CleanMyMac\|CleanShot'; then
-    pass 'dump --list prints installed app names'
+    pass 'bundle dump --list prints installed app names'
   else
-    fail 'dump --list prints installed app names'
+    fail 'bundle dump --list prints installed app names'
   fi
 
-  # --- dump --file ---
-  if "${CLI}" dump --file "${bundle_tmp}" >/dev/null 2>&1; then
-    pass 'dump --file exits 0'
+  # --- bundle dump --file ---
+  if "${CLI}" bundle dump --file "${bundle_tmp}" >/dev/null 2>&1; then
+    pass 'bundle dump --file exits 0'
   else
-    fail 'dump --file exits 0'
+    fail 'bundle dump --file exits 0'
   fi
 
-  if grep -q '^# setapp bundle' "${bundle_tmp}" 2>/dev/null; then
-    pass 'dump --file writes header comment'
+  if ! grep -q '^#' "${bundle_tmp}" 2>/dev/null; then
+    pass 'bundle dump --file writes no header comment'
   else
-    fail 'dump --file writes header comment'
+    fail 'bundle dump --file writes no header comment'
   fi
 
   if grep -qi 'proxyman\|cleanmymac\|cleanshot' "${bundle_tmp}" 2>/dev/null; then
-    pass 'dump --file contains app names'
+    pass 'bundle dump --file contains app names'
   else
-    fail 'dump --file contains app names'
+    fail 'bundle dump --file contains app names'
   fi
 
   # --- bundle check ---
-  if "${CLI}" bundle check --file "${bundle_tmp}" >/dev/null 2>&1; then
+  if "${CLI}" bundle check --file "${bundle_tmp}" --path /Applications/Setapp >/dev/null 2>&1; then
     pass 'bundle check passes on freshly-dumped bundle'
   else
     fail 'bundle check passes on freshly-dumped bundle'
@@ -158,10 +158,10 @@ run_read_only_tests() {
 
   # --- bundle edit (creates file) ---
   EDITOR=true "${CLI}" bundle edit --file "${edit_tmp}" 2>/dev/null || true
-  if grep -q '^# setapp bundle' "${edit_tmp}" 2>/dev/null; then
-    pass 'bundle edit creates file with header'
+  if [[ -f "${edit_tmp}" ]] && [[ ! -s "${edit_tmp}" ]]; then
+    pass 'bundle edit creates empty file'
   else
-    fail 'bundle edit creates file with header'
+    fail 'bundle edit creates empty file'
   fi
 
   # --- verbose flag ---
