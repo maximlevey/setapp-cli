@@ -4,7 +4,7 @@
 ![Swift](https://img.shields.io/badge/swift-5.9-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Install and manage [Setapp](https://setapp.com) apps from the command line. Save your app list to a bundle file, check it into your dotfiles, and restore it on a new Mac -- like Homebrew, but for Setapp.
+Install and manage [Setapp](https://setapp.com) apps from the command line. Save your app list to an AppList file, check it into your dotfiles, and restore it on a new Mac -- like Homebrew, but for Setapp.
 
 ## Quick start
 
@@ -28,8 +28,7 @@ SUBCOMMANDS:
   reinstall               Uninstall then reinstall a Setapp app.
   list                    List installed Setapp apps.
   check                   Find locally installed apps that are available via Setapp.
-  dump                    Save installed Setapp apps to a bundle file.
-  bundle                  Manage bundle files for saving and restoring app lists.
+  bundle                  Manage AppList files for saving and restoring app lists.
 ```
 
 ## Documentation
