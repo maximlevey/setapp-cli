@@ -3,7 +3,6 @@ import ArgumentParser
 import XCTest
 
 final class BundleCheckCommandTests: CommandTestCase {
-
     // MARK: - --path flag: all installed
 
     func testAllInstalledWithCustomPath() throws {
