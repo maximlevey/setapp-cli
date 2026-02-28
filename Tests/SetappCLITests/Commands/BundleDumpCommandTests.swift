@@ -27,6 +27,30 @@ final class BundleDumpCommandTests: CommandTestCase {
         XCTAssertTrue(written, "Bundle file should have been written")
     }
 
+    func testListFlagPrintsApps() throws {
+        try XCTSkipUnless(setappDirectoryExists, "Setapp directory not present on this machine")
+
+        mockDetector.allInstalledNames = ["Proxyman", "Bartender"]
+
+        var cmd = try BundleDumpCommand.parse(["--list"])
+        XCTAssertNoThrow(try cmd.run())
+    }
+
+    func testListFlagDoesNotWriteFile() throws {
+        try XCTSkipUnless(setappDirectoryExists, "Setapp directory not present on this machine")
+
+        let tmp = TempDirectory()
+        let filePath = tmp.url.appendingPathComponent("should-not-exist").path
+
+        mockDetector.allInstalledNames = ["Proxyman"]
+
+        var cmd = try BundleDumpCommand.parse(["--list", "--file", filePath])
+        try cmd.run()
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: filePath),
+                       "File should not be written when --list is passed")
+    }
+
     func testThrowsWhenNoSetappDirectory() throws {
         try XCTSkipIf(setappDirectoryExists, "Setapp directory present -- cannot test missing dir path")
 

@@ -12,12 +12,22 @@ struct BundleDumpCommand: ParsableCommand {
     @Option(name: .shortAndLong, help: "Bundle file path (default: ~/.setapp/bundle).")
     var file: String?
 
+    @Flag(name: .shortAndLong, help: "Print app names to stdout instead of writing a file.")
+    var list: Bool = false
+
     mutating func run() throws {
         globals.apply()
         try Dependencies.verifyEnvironment()
 
         let installed: [String] = try BundleFile.fetchInstalledNames()
         if installed.isEmpty {
+            return
+        }
+
+        if list {
+            for name in installed {
+                Printer.log(name)
+            }
             return
         }
 
