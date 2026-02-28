@@ -5,7 +5,7 @@ BIN_DIR ?= $(HOME)/.local/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: build install uninstall clean help
+.PHONY: build install uninstall clean help lint test-local test-e2e
 
 build:			## Build the release binary (universal)
 	swift build --configuration release --arch arm64 --arch x86_64 \
@@ -25,6 +25,11 @@ lint:			## Run linting tools
 	swiftlint --strict
 	swiftformat .
 
+test-local:		## Run local functional tests (read-only)
+	./test-local.sh
+
+test-e2e:		## Run full E2E tests (installs/removes real apps)
+	./test-local.sh --e2e
+
 help:			## Show this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m (default: help)\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
-	
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m (default: help)\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
