@@ -13,9 +13,9 @@ final class URLExtensionTests: XCTestCase {
         XCTAssertTrue(dir.path.hasSuffix(".setapp"))
     }
 
-    func testDefaultBundlePath() {
-        let path = URL.defaultBundlePath
-        XCTAssertTrue(path.path.hasSuffix(".setapp/bundle"))
+    func testDefaultAppListPath() {
+        let path = URL.defaultAppListPath
+        XCTAssertTrue(path.path.hasSuffix(".setapp/AppList"))
     }
 
     func testSetappAppsDirectoriesCount() {

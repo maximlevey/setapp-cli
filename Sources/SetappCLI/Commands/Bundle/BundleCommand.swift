@@ -3,13 +3,13 @@ import ArgumentParser
 struct BundleCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "bundle",
-        abstract: "Manage bundle files for saving and restoring app lists.",
+        abstract: "Manage AppList files for saving and restoring app lists.",
         discussion: """
-        A bundle file is a plain-text list of app names (one per line).
+        An AppList file is a plain-text list of app names (one per line).
         Use 'bundle dump' on one Mac, then 'bundle install' on another
         to replicate your Setapp app setup.
 
-        Default bundle path: ~/.setapp/bundle
+        Default AppList path: ~/.setapp/AppList
         """,
         subcommands: [
             BundleInstallCommand.self,

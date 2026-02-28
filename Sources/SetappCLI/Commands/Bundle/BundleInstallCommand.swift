@@ -9,7 +9,7 @@ struct BundleInstallCommand: ParsableCommand {
 
     @OptionGroup var globals: GlobalOptions
 
-    @Option(name: .shortAndLong, help: "Bundle file path (default: ~/.setapp/bundle).")
+    @Option(name: .shortAndLong, help: "AppList file path (default: ~/.setapp/AppList).")
     var file: String?
 
     @Flag(name: .long, help: "Remove the non-Setapp version from /Applications after install.")
@@ -19,11 +19,11 @@ struct BundleInstallCommand: ParsableCommand {
         globals.apply()
         try Dependencies.verifyEnvironment()
 
-        let path: URL = BundleFile.resolvePath(flagValue: file)
-        let names: [String] = try BundleFile.parse(at: path)
+        let path: URL = AppListFile.resolvePath(flagValue: file)
+        let names: [String] = try AppListFile.parse(at: path)
 
         if names.isEmpty {
-            Printer.warning("Bundle file is empty: \(path.path)")
+            Printer.warning("AppList file is empty: \(path.path)")
             return
         }
 

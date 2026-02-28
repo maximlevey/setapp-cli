@@ -9,7 +9,7 @@ struct BundleDumpCommand: ParsableCommand {
 
     @OptionGroup var globals: GlobalOptions
 
-    @Option(name: .shortAndLong, help: "Bundle file path (default: ~/.setapp/bundle).")
+    @Option(name: .shortAndLong, help: "AppList file path (default: ~/.setapp/AppList).")
     var file: String?
 
     @Flag(name: .shortAndLong, help: "Print app names to stdout instead of writing a file.")
@@ -19,7 +19,7 @@ struct BundleDumpCommand: ParsableCommand {
         globals.apply()
         try Dependencies.verifyEnvironment()
 
-        let installed: [String] = try BundleFile.fetchInstalledNames()
+        let installed: [String] = try AppListFile.fetchInstalledNames()
         if installed.isEmpty {
             return
         }
@@ -31,9 +31,9 @@ struct BundleDumpCommand: ParsableCommand {
             return
         }
 
-        let path: URL = BundleFile.resolvePath(flagValue: file)
+        let path: URL = AppListFile.resolvePath(flagValue: file)
         Printer.info("Saving \(installed.count) app(s) to \(path.path)")
-        try BundleFile.write(names: installed, to: path)
+        try AppListFile.write(names: installed, to: path)
         Printer.log("Wrote \(installed.count) app(s) to \(path.path)")
     }
 }

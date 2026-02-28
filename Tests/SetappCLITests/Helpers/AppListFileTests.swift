@@ -2,26 +2,26 @@ import Foundation
 @testable import SetappCLI
 import XCTest
 
-final class BundleFileTests: XCTestCase {
+final class AppListFileTests: XCTestCase {
     // MARK: - resolvePath
 
     func testResolvePathFlagValueTakesPriority() {
-        let result = BundleFile.resolvePath(flagValue: "/custom/path")
+        let result = AppListFile.resolvePath(flagValue: "/custom/path")
         XCTAssertEqual(result.path, "/custom/path")
     }
 
     func testResolvePathDefaultPathWhenNoFlag() {
-        let result = BundleFile.resolvePath(flagValue: nil)
-        XCTAssertEqual(result, URL.defaultBundlePath)
+        let result = AppListFile.resolvePath(flagValue: nil)
+        XCTAssertEqual(result, URL.defaultAppListPath)
     }
 
     func testResolvePathEmptyStringFallsToDefault() {
-        let result = BundleFile.resolvePath(flagValue: "")
-        XCTAssertEqual(result, URL.defaultBundlePath)
+        let result = AppListFile.resolvePath(flagValue: "")
+        XCTAssertEqual(result, URL.defaultAppListPath)
     }
 
     func testResolvePathExpandsTilde() {
-        let result = BundleFile.resolvePath(flagValue: "~/my/bundle")
+        let result = AppListFile.resolvePath(flagValue: "~/my/bundle")
         let expected = (("~/my/bundle" as NSString).expandingTildeInPath)
         XCTAssertEqual(result.path, expected)
         XCTAssertFalse(result.path.contains("~"))
@@ -37,58 +37,58 @@ final class BundleFileTests: XCTestCase {
         CleanMyMac
         Bartender
         """
-        let file = tmp.createFile(named: "bundle", content: content)
+        let file = tmp.createFile(named: "AppList", content: content)
 
-        let names = try BundleFile.parse(at: file)
+        let names = try AppListFile.parse(at: file)
         XCTAssertEqual(names, ["Proxyman", "CleanMyMac", "Bartender"])
     }
 
     func testParseStripsInlineComments() throws {
         let tmp = TempDirectory()
         let content = "Proxyman # my favorite\nBartender # useful tool\n"
-        let file = tmp.createFile(named: "bundle", content: content)
+        let file = tmp.createFile(named: "AppList", content: content)
 
-        let names = try BundleFile.parse(at: file)
+        let names = try AppListFile.parse(at: file)
         XCTAssertEqual(names, ["Proxyman", "Bartender"])
     }
 
     func testParseStripsFullLineComments() throws {
         let tmp = TempDirectory()
         let content = "# This is a comment\n# Another comment\nProxyman\n"
-        let file = tmp.createFile(named: "bundle", content: content)
+        let file = tmp.createFile(named: "AppList", content: content)
 
-        let names = try BundleFile.parse(at: file)
+        let names = try AppListFile.parse(at: file)
         XCTAssertEqual(names, ["Proxyman"])
     }
 
     func testParseStripsBlankLines() throws {
         let tmp = TempDirectory()
         let content = "Proxyman\n\n\nBartender\n\n"
-        let file = tmp.createFile(named: "bundle", content: content)
+        let file = tmp.createFile(named: "AppList", content: content)
 
-        let names = try BundleFile.parse(at: file)
+        let names = try AppListFile.parse(at: file)
         XCTAssertEqual(names, ["Proxyman", "Bartender"])
     }
 
     func testParseTrimsWhitespaceFromNames() throws {
         let tmp = TempDirectory()
         let content = "  Proxyman  \n\tBartender\t\n"
-        let file = tmp.createFile(named: "bundle", content: content)
+        let file = tmp.createFile(named: "AppList", content: content)
 
-        let names = try BundleFile.parse(at: file)
+        let names = try AppListFile.parse(at: file)
         XCTAssertEqual(names, ["Proxyman", "Bartender"])
     }
 
-    func testParseThrowsBundleFileNotFoundForMissingFile() {
-        let missingURL = URL(fileURLWithPath: "/nonexistent/\(UUID().uuidString)/bundle")
+    func testParseThrowsAppListFileNotFoundForMissingFile() {
+        let missingURL = URL(fileURLWithPath: "/nonexistent/\(UUID().uuidString)/AppList")
 
-        XCTAssertThrowsError(try BundleFile.parse(at: missingURL)) { error in
+        XCTAssertThrowsError(try AppListFile.parse(at: missingURL)) { error in
             guard let setappError = error as? SetappError else {
                 XCTFail("Expected SetappError, got \(type(of: error))")
                 return
             }
-            guard case .bundleFileNotFound = setappError else {
-                XCTFail("Expected bundleFileNotFound, got \(setappError)")
+            guard case .appListFileNotFound = setappError else {
+                XCTFail("Expected appListFileNotFound, got \(setappError)")
                 return
             }
         }
@@ -97,9 +97,9 @@ final class BundleFileTests: XCTestCase {
     func testParseReturnsEmptyArrayForOnlyCommentsAndBlanks() throws {
         let tmp = TempDirectory()
         let content = "# comment one\n# comment two\n\n  \n"
-        let file = tmp.createFile(named: "bundle", content: content)
+        let file = tmp.createFile(named: "AppList", content: content)
 
-        let names = try BundleFile.parse(at: file)
+        let names = try AppListFile.parse(at: file)
         XCTAssertTrue(names.isEmpty)
     }
 
@@ -110,18 +110,18 @@ final class BundleFileTests: XCTestCase {
         let nested = tmp.url
             .appendingPathComponent("deep")
             .appendingPathComponent("nested")
-            .appendingPathComponent("bundle")
+            .appendingPathComponent("AppList")
 
-        try BundleFile.write(names: ["Proxyman"], to: nested)
+        try AppListFile.write(names: ["Proxyman"], to: nested)
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: nested.path))
     }
 
     func testWriteDoesNotIncludeHeader() throws {
         let tmp = TempDirectory()
-        let file = tmp.url.appendingPathComponent("bundle")
+        let file = tmp.url.appendingPathComponent("AppList")
 
-        try BundleFile.write(names: ["Proxyman"], to: file)
+        try AppListFile.write(names: ["Proxyman"], to: file)
 
         let content = try String(contentsOf: file, encoding: .utf8)
         XCTAssertFalse(content.hasPrefix("#"), "Written file must not start with a comment header")
@@ -130,9 +130,9 @@ final class BundleFileTests: XCTestCase {
 
     func testWriteSortsNamesCaseInsensitively() throws {
         let tmp = TempDirectory()
-        let file = tmp.url.appendingPathComponent("bundle")
+        let file = tmp.url.appendingPathComponent("AppList")
 
-        try BundleFile.write(names: ["Proxyman", "bartender", "CleanMyMac"], to: file)
+        try AppListFile.write(names: ["Proxyman", "bartender", "CleanMyMac"], to: file)
 
         let content = try String(contentsOf: file, encoding: .utf8)
         let lines = content.components(separatedBy: "\n")
@@ -142,9 +142,9 @@ final class BundleFileTests: XCTestCase {
 
     func testWriteOutputEndsWithNewline() throws {
         let tmp = TempDirectory()
-        let file = tmp.url.appendingPathComponent("bundle")
+        let file = tmp.url.appendingPathComponent("AppList")
 
-        try BundleFile.write(names: ["Proxyman"], to: file)
+        try AppListFile.write(names: ["Proxyman"], to: file)
 
         let content = try String(contentsOf: file, encoding: .utf8)
         XCTAssertTrue(content.hasSuffix("\n"))
@@ -152,12 +152,12 @@ final class BundleFileTests: XCTestCase {
 
     func testWriteThenParseRoundTrip() throws {
         let tmp = TempDirectory()
-        let file = tmp.url.appendingPathComponent("bundle")
+        let file = tmp.url.appendingPathComponent("AppList")
 
         let original = ["Proxyman", "bartender", "CleanMyMac"]
-        try BundleFile.write(names: original, to: file)
+        try AppListFile.write(names: original, to: file)
 
-        let parsed = try BundleFile.parse(at: file)
+        let parsed = try AppListFile.parse(at: file)
         let expectedSorted = ["bartender", "CleanMyMac", "Proxyman"]
         XCTAssertEqual(parsed, expectedSorted)
     }

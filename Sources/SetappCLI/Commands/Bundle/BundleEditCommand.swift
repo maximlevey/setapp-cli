@@ -9,13 +9,13 @@ struct BundleEditCommand: ParsableCommand {
 
     @OptionGroup var globals: GlobalOptions
 
-    @Option(name: .shortAndLong, help: "Bundle file path (default: ~/.setapp/bundle).")
+    @Option(name: .shortAndLong, help: "AppList file path (default: ~/.setapp/AppList).")
     var file: String?
 
     mutating func run() throws {
         globals.apply()
 
-        let path: URL = BundleFile.resolvePath(flagValue: file)
+        let path: URL = AppListFile.resolvePath(flagValue: file)
 
         if !FileManager.default.fileExists(atPath: path.path) {
             try FileManager.default.createDirectory(

@@ -11,9 +11,9 @@ extension URL {
         homeDirectory.appendingPathComponent(".setapp")
     }
 
-    /// The default bundle file path (~/.setapp/bundle).
-    static var defaultBundlePath: URL {
-        setappDirectory.appendingPathComponent("bundle")
+    /// The default AppList file path (~/.setapp/AppList).
+    static var defaultAppListPath: URL {
+        setappDirectory.appendingPathComponent("AppList")
     }
 
     /// Setapp apps directories — admin (/Applications/Setapp/) and

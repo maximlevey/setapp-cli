@@ -33,17 +33,17 @@ final class BundleCheckCommandTests: CommandTestCase {
         }
     }
 
-    func testBundleFileNotFound() throws {
-        var cmd = try BundleCheckCommand.parse(["--file", "/nonexistent/path/bundle"])
+    func testAppListFileNotFound() throws {
+        var cmd = try BundleCheckCommand.parse(["--file", "/nonexistent/path/AppList"])
 
         XCTAssertThrowsError(try cmd.run()) { error in
             guard let setappError = error as? SetappError else {
                 return XCTFail("Expected SetappError, got \(type(of: error))")
             }
-            if case .bundleFileNotFound = setappError {
+            if case .appListFileNotFound = setappError {
                 // Expected
             } else {
-                XCTFail("Expected bundleFileNotFound, got \(setappError)")
+                XCTFail("Expected appListFileNotFound, got \(setappError)")
             }
         }
     }

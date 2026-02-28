@@ -6,8 +6,8 @@ enum SetappError: LocalizedError, CustomStringConvertible, Equatable {
     case appAlreadyInstalled(name: String)
     case databaseNotFound(path: String)
     case databaseQueryFailed(message: String)
-    case bundleFileNotFound(path: String)
-    case bundleFileEmpty
+    case appListFileNotFound(path: String)
+    case appListFileEmpty
     case xpcConnectionFailed(message: String)
     case xpcRequestTimedOut(seconds: Int)
     case xpcRequestFailed(message: String)
@@ -29,10 +29,10 @@ enum SetappError: LocalizedError, CustomStringConvertible, Equatable {
             "Setapp database not found: \(path)\nIs Setapp installed?"
         case let .databaseQueryFailed(message):
             "database query failed: \(message)"
-        case let .bundleFileNotFound(path):
+        case let .appListFileNotFound(path):
             "no such file: \(path)"
-        case .bundleFileEmpty:
-            "bundle file is empty"
+        case .appListFileEmpty:
+            "AppList file is empty"
         case let .xpcConnectionFailed(message):
             "XPC connection failed: \(message)\nIs Setapp running?"
         case let .xpcRequestTimedOut(seconds):

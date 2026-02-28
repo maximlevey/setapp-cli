@@ -1,22 +1,22 @@
 import Foundation
 
-/// Bundle file read/write operations.
-enum BundleFile {
-    /// Resolve bundle file path from flag value, env var, or default.
+/// AppList file read/write operations.
+enum AppListFile {
+    /// Resolve AppList file path from flag value, env var, or default.
     static func resolvePath(flagValue: String?) -> URL {
         if let flagValue, !flagValue.isEmpty {
             return URL(fileURLWithPath: (flagValue as NSString).expandingTildeInPath)
         }
-        if let envPath = ProcessInfo.processInfo.environment["SETAPP_BUNDLE_FILE"] {
+        if let envPath = ProcessInfo.processInfo.environment["SETAPP_APP_LIST_FILE"] {
             return URL(fileURLWithPath: (envPath as NSString).expandingTildeInPath)
         }
-        return URL.defaultBundlePath
+        return URL.defaultAppListPath
     }
 
-    /// Parse a bundle file, returning app names (comments and blanks stripped).
+    /// Parse an AppList file, returning app names (comments and blanks stripped).
     static func parse(at path: URL) throws -> [String] {
         guard FileManager.default.fileExists(atPath: path.path) else {
-            throw SetappError.bundleFileNotFound(path: path.path)
+            throw SetappError.appListFileNotFound(path: path.path)
         }
 
         let content: String = try String(contentsOf: path, encoding: .utf8)

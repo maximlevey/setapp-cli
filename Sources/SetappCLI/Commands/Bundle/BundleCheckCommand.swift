@@ -9,15 +9,15 @@ struct BundleCheckCommand: ParsableCommand {
 
     @OptionGroup var globals: GlobalOptions
 
-    @Option(name: .shortAndLong, help: "Bundle file path (default: ~/.setapp/bundle).")
+    @Option(name: .shortAndLong, help: "AppList file path (default: ~/.setapp/AppList).")
     var file: String?
 
     mutating func run() throws {
         globals.apply()
         try Dependencies.verifyEnvironment()
 
-        let path: URL = BundleFile.resolvePath(flagValue: file)
-        let names: [String] = try BundleFile.parse(at: path)
+        let path: URL = AppListFile.resolvePath(flagValue: file)
+        let names: [String] = try AppListFile.parse(at: path)
         let missing: [String] = names.filter { !Dependencies.detector.isInstalled($0) }
 
         if missing.isEmpty {

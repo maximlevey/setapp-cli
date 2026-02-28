@@ -31,13 +31,13 @@ final class SetappErrorTests: XCTestCase {
         XCTAssertTrue(error.description.contains("syntax error"))
     }
 
-    func testBundleFileNotFound() {
-        let error = SetappError.bundleFileNotFound(path: "/bundle")
-        XCTAssertTrue(error.description.contains("/bundle"))
+    func testAppListFileNotFound() {
+        let error = SetappError.appListFileNotFound(path: "/AppList")
+        XCTAssertTrue(error.description.contains("/AppList"))
     }
 
-    func testBundleFileEmpty() {
-        let error = SetappError.bundleFileEmpty
+    func testAppListFileEmpty() {
+        let error = SetappError.appListFileEmpty
         XCTAssertTrue(error.description.contains("empty"))
     }
 
@@ -88,7 +88,7 @@ final class SetappErrorTests: XCTestCase {
     func testErrorDescriptionMatchesDescription() {
         let errors: [SetappError] = [
             .appNotFound(name: "X"),
-            .bundleFileEmpty,
+            .appListFileEmpty,
             .xpcRequestTimedOut(seconds: 5),
             .generalError(message: "test")
         ]
