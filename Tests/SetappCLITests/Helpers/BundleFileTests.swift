@@ -117,20 +117,15 @@ final class BundleFileTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: nested.path))
     }
 
-    func testWriteIncludesHeaderWithDate() throws {
+    func testWriteDoesNotIncludeHeader() throws {
         let tmp = TempDirectory()
         let file = tmp.url.appendingPathComponent("bundle")
 
         try BundleFile.write(names: ["Proxyman"], to: file)
 
         let content = try String(contentsOf: file, encoding: .utf8)
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let today = formatter.string(from: Date())
-
-        XCTAssertTrue(content.hasPrefix("# setapp bundle -- \(today)"))
-        XCTAssertTrue(content.contains("# Run `setapp bundle install`"))
+        XCTAssertFalse(content.hasPrefix("#"), "Written file must not start with a comment header")
+        XCTAssertTrue(content.contains("Proxyman"), "Written file must contain app names")
     }
 
     func testWriteSortsNamesCaseInsensitively() throws {

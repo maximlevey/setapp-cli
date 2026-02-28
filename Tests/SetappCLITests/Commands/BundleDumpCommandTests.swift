@@ -25,6 +25,10 @@ final class BundleDumpCommandTests: CommandTestCase {
 
         let written = FileManager.default.fileExists(atPath: filePath)
         XCTAssertTrue(written, "Bundle file should have been written")
+
+        let content = try String(contentsOfFile: filePath, encoding: .utf8)
+        XCTAssertFalse(content.hasPrefix("#"), "Written file must not start with a comment header")
+        XCTAssertTrue(content.contains("Proxyman"), "Written file must contain app names")
     }
 
     func testListFlagPrintsApps() throws {

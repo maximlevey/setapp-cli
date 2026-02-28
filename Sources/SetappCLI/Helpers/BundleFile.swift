@@ -45,30 +45,18 @@ enum BundleFile {
         return installed
     }
 
-    /// Write sorted app names to a bundle file with a header comment.
+    /// Write sorted app names to an AppList file (no header, one name per line).
     static func write(names: [String], to path: URL) throws {
         try FileManager.default.createDirectory(
             at: path.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
 
-        let formatter: DateFormatter = .init()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let today: String = formatter.string(from: Date())
-
         let sorted: [String] = names.sorted {
             $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
         }
 
-        var lines: [String] = [
-            "# setapp bundle -- \(today)",
-            "# Run `setapp bundle install` to reinstall on a new Mac.",
-            ""
-        ]
-        lines.append(contentsOf: sorted)
-        lines.append("")
-
-        let content: String = lines.joined(separator: "\n")
+        let content: String = sorted.joined(separator: "\n") + "\n"
         try content.write(to: path, atomically: true, encoding: .utf8)
     }
 }

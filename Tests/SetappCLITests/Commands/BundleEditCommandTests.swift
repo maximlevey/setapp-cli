@@ -5,7 +5,7 @@ import XCTest
 final class BundleEditCommandTests: CommandTestCase {
     // MARK: - File creation
 
-    func testCreatesFileWithHeaderWhenMissing() throws {
+    func testCreatesEmptyFileWhenMissing() throws {
         let tmp = TempDirectory()
         let filePath = tmp.url.appendingPathComponent("new-bundle").path
 
@@ -18,11 +18,10 @@ final class BundleEditCommandTests: CommandTestCase {
         var cmd = try BundleEditCommand.parse(["--file", filePath])
         try cmd.run()
 
-        XCTAssertTrue(FileManager.default.fileExists(atPath: filePath), "Bundle file should be created")
-
+        XCTAssertTrue(FileManager.default.fileExists(atPath: filePath),
+                      "File should be created")
         let content = try String(contentsOfFile: filePath, encoding: .utf8)
-        XCTAssertTrue(content.contains("# setapp bundle"), "File should contain header comment")
-        XCTAssertTrue(content.contains("setapp bundle install"), "File should contain install hint")
+        XCTAssertEqual(content, "", "Newly created AppList file should be empty")
     }
 
     func testDoesNotOverwriteExistingFile() throws {

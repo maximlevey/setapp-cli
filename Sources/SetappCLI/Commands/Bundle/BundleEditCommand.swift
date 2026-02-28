@@ -17,18 +17,12 @@ struct BundleEditCommand: ParsableCommand {
 
         let path: URL = BundleFile.resolvePath(flagValue: file)
 
-        // Create the file with a header if it doesn't exist.
         if !FileManager.default.fileExists(atPath: path.path) {
             try FileManager.default.createDirectory(
                 at: path.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
-            let header: String = """
-            # setapp bundle
-            # Run `setapp bundle install` to reinstall on a new Mac.
-
-            """
-            try header.write(to: path, atomically: true, encoding: .utf8)
+            try "".write(to: path, atomically: true, encoding: .utf8)
         }
 
         let editor: String = ProcessInfo.processInfo.environment["EDITOR"] ?? "open"
