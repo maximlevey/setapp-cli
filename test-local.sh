@@ -50,3 +50,20 @@ if [[ ! -x "$CLI" ]]; then
 fi
 
 printf "  Binary: %s\n\n" "$CLI"
+# ============================================================
+# Tier 1: Read-only tests
+# ============================================================
+printf "${BOLD}==> Tier 1: Read-only tests${RESET}\n"
+
+# --- Binary basics ---
+if "$CLI" --version 2>&1 | grep -q "2.0.0"; then
+    pass "--version prints version"
+else
+    fail "--version prints version"
+fi
+
+if "$CLI" --help 2>&1 | grep -q "SUBCOMMANDS"; then
+    pass "--help shows subcommands"
+else
+    fail "--help shows subcommands"
+fi
