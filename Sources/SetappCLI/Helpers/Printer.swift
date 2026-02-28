@@ -45,8 +45,8 @@ enum Printer {
     /// Error — red "Error:" prefix, writes to stderr.
     static func error(_ message: String) {
         let tty = isatty(STDERR_FILENO) != 0
-        let r = tty ? "\u{1B}[31m" : ""
+        let errRed = tty ? "\u{1B}[31m" : ""
         let rst = tty ? "\u{1B}[0m" : ""
-        FileHandle.standardError.write(Data("\(r)Error:\(rst) \(message)\n".utf8))
+        FileHandle.standardError.write(Data("\(errRed)Error:\(rst) \(message)\n".utf8))
     }
 }

@@ -53,8 +53,8 @@ enum XPCService {
         let ptrSize = MemoryLayout<UnsafeRawPointer>.size
         var result: [String] = []
 
-        for i in 0..<Int(count) {
-            let clsRaw = rawPtr.load(fromByteOffset: i * ptrSize, as: UnsafeRawPointer.self)
+        for index in 0..<Int(count) {
+            let clsRaw = rawPtr.load(fromByteOffset: index * ptrSize, as: UnsafeRawPointer.self)
             let cName = class_getName(unsafeBitCast(clsRaw, to: AnyClass.self))
             if cName[0] == 0x41, cName[1] == 0x46, cName[2] == 0x58 { // "AFX"
                 result.append(String(cString: cName))
@@ -347,53 +347,72 @@ enum XPCService {
         try checkResponse(response)
     }
 
+}
+
+// MARK: - Diagnostics
+
+extension XPCService {
+
     /// Run diagnostics and return results as JSON string.
     static func diag() throws -> String {
         var results: [[String: Any]] = []
-
-        // 1. Bundle identifier
-        let bundleID = Bundle.main.bundleIdentifier ?? "<nil>"
-        results.append([
-            "check": "bundleIdentifier",
-            "value": bundleID,
-            "ok": Bundle.main.bundleIdentifier != nil,
-        ])
-
-        // 2. Framework exists
         let fwPath = NSString(string: frameworkPath).expandingTildeInPath
         let fwExists = FileManager.default.fileExists(atPath: fwPath)
-        results.append([
-            "check": "frameworkExists",
-            "path": fwPath,
-            "ok": fwExists,
-        ])
 
-        // 3. dlopen
-        var dlopenOK = false
-        var dlopenError = ""
-        if fwExists {
-            if dlopen(fwPath, RTLD_NOW | RTLD_GLOBAL) != nil {
-                dlopenOK = true
-            } else {
-                dlopenError = String(cString: dlerror())
-            }
-        } else {
-            dlopenError = "framework binary not found"
+        results.append(diagBundleID())
+        results.append(diagFrameworkExists(path: fwPath, exists: fwExists))
+
+        let dlopenOK = diagDlopen(path: fwPath, exists: fwExists)
+        results.append(dlopenOK.result)
+
+        results.append(diagAFXClasses())
+        results.append(diagExpectedSelectors())
+        results.append(diagAdaptorProbe(dlopenOK: dlopenOK.ok))
+        results.append(diagCrashReports())
+
+        let jsonDict: [String: Any] = ["diag": results]
+        let data = try JSONSerialization.data(
+            withJSONObject: jsonDict, options: [.prettyPrinted, .sortedKeys]
+        )
+        return String(data: data, encoding: .utf8) ?? "{}"
+    }
+
+    private static func diagBundleID() -> [String: Any] {
+        [
+            "check": "bundleIdentifier",
+            "value": Bundle.main.bundleIdentifier ?? "<nil>",
+            "ok": Bundle.main.bundleIdentifier != nil,
+        ]
+    }
+
+    private static func diagFrameworkExists(path: String, exists: Bool) -> [String: Any] {
+        ["check": "frameworkExists", "path": path, "ok": exists]
+    }
+
+    private static func diagDlopen(
+        path: String, exists: Bool
+    ) -> (result: [String: Any], ok: Bool) {
+        guard exists else {
+            return (["check": "dlopen", "ok": false, "error": "framework binary not found"], false)
         }
-        var dlopenResult: [String: Any] = ["check": "dlopen", "ok": dlopenOK]
-        if !dlopenOK { dlopenResult["error"] = dlopenError }
-        results.append(dlopenResult)
+        if dlopen(path, RTLD_NOW | RTLD_GLOBAL) != nil {
+            return (["check": "dlopen", "ok": true], true)
+        }
+        let err = String(cString: dlerror())
+        return (["check": "dlopen", "ok": false, "error": err], false)
+    }
 
-        // 4. AFX class count
+    private static func diagAFXClasses() -> [String: Any] {
         let afxClasses = allAFXClassList()
-        results.append([
+        return [
             "check": "afxClassCount",
             "value": afxClasses.count,
-            "ok": afxClasses.count > 0,
-        ])
+            "ok": !afxClasses.isEmpty,
+        ]
+    }
 
-        // 5. Expected selectors
-        let expectedSelectors = [
+    private static func diagExpectedSelectors() -> [String: Any] {
+        let expected = [
             "installVendorApp:shouldLaunch:callback:",
             "fetchAppsWithCallback:",
             "fetchAppWithID:callback:",
@@ -403,77 +422,79 @@ enum XPCService {
 
         if let clientClass: AnyClass = NSClassFromString(appsClientClass) {
             clientClassFound = true
-            var methodCount: UInt32 = 0
-            let methods = class_copyMethodList(clientClass, &methodCount)
-            var methodNames: [String] = []
-            if let methods {
-                for i in 0..<Int(methodCount) {
-                    methodNames.append(String(cString: sel_getName(method_getName(methods[i]))))
-                }
-                free(methods)
-            }
-            for sel in expectedSelectors {
+            let methodNames = methodNamesForClass(clientClass)
+            for sel in expected {
                 selectorResults.append(["selector": sel, "found": methodNames.contains(sel)])
             }
         } else {
-            for sel in expectedSelectors {
+            for sel in expected {
                 selectorResults.append(["selector": sel, "found": false])
             }
         }
-        results.append([
+
+        return [
             "check": "expectedSelectors",
             "class": appsClientClass,
             "classFound": clientClassFound,
             "selectors": selectorResults,
             "ok": selectorResults.allSatisfy { ($0["found"] as? Bool) == true },
-        ])
+        ]
+    }
 
-        // 6. Adaptor probe
-        var probeOK = false
-        var probeError = ""
-        if dlopenOK {
-            if let cls: AnyClass = NSClassFromString(appsClientClass),
-               let reqRaw = (cls as AnyObject)
-                   .perform(NSSelectorFromString("requestClasses"))?.takeUnretainedValue(),
-               let reqClasses = reqRaw as? Set<AnyHashable> {
-                if CreateAdaptor(appsServiceName, tierName, reqClasses, nil) != nil {
-                    probeOK = true
-                } else {
-                    probeError = "CreateAdaptor returned nil"
-                }
-            } else {
-                probeError = "\(appsClientClass) class or requestClasses unavailable"
+    private static func methodNamesForClass(_ cls: AnyClass) -> [String] {
+        var methodCount: UInt32 = 0
+        let methods = class_copyMethodList(cls, &methodCount)
+        var names: [String] = []
+        if let methods {
+            for index in 0..<Int(methodCount) {
+                names.append(String(cString: sel_getName(method_getName(methods[index]))))
             }
-        } else {
-            probeError = "framework not loaded"
+            free(methods)
         }
-        var probeResult: [String: Any] = [
+        return names
+    }
+
+    private static func diagAdaptorProbe(dlopenOK: Bool) -> [String: Any] {
+        var result: [String: Any] = [
             "check": "appsManagementAdaptorProbe",
             "service": appsServiceName,
-            "ok": probeOK,
         ]
-        if !probeOK { probeResult["error"] = probeError }
-        results.append(probeResult)
 
-        // 7. Crash reports
+        guard dlopenOK else {
+            result["ok"] = false
+            result["error"] = "framework not loaded"
+            return result
+        }
+
+        guard let cls: AnyClass = NSClassFromString(appsClientClass),
+              let reqRaw = (cls as AnyObject)
+                  .perform(NSSelectorFromString("requestClasses"))?.takeUnretainedValue(),
+              let reqClasses = reqRaw as? Set<AnyHashable> else {
+            result["ok"] = false
+            result["error"] = "\(appsClientClass) class or requestClasses unavailable"
+            return result
+        }
+
+        result["ok"] = CreateAdaptor(appsServiceName, tierName, reqClasses, nil) != nil
+        if result["ok"] as? Bool != true {
+            result["error"] = "CreateAdaptor returned nil"
+        }
+        return result
+    }
+
+    private static func diagCrashReports() -> [String: Any] {
         let diagDir = NSString(string: "~/Library/Logs/DiagnosticReports").expandingTildeInPath
         var crashes: [String] = []
         if let contents = try? FileManager.default.contentsOfDirectory(atPath: diagDir) {
             crashes = contents.filter { $0.hasPrefix("setapp-cli") || $0.hasPrefix("setapp-xpc") }
                 .sorted()
         }
-        results.append([
+        return [
             "check": "crashReports",
             "directory": diagDir,
             "count": crashes.count,
             "files": crashes,
             "ok": crashes.isEmpty,
-        ])
-
-        let jsonDict: [String: Any] = ["diag": results]
-        let data = try JSONSerialization.data(
-            withJSONObject: jsonDict, options: [.prettyPrinted, .sortedKeys]
-        )
-        return String(data: data, encoding: .utf8) ?? "{}"
+        ]
     }
 }

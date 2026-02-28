@@ -11,21 +11,21 @@ enum Database {
             throw SetappError.databaseNotFound(path: path)
         }
 
-        var db: OpaquePointer?
+        var connection: OpaquePointer?
         let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX
 
-        guard sqlite3_open_v2(path, &db, flags, nil) == SQLITE_OK, let db else {
-            let message = db.map { String(cString: sqlite3_errmsg($0)) } ?? "unknown error"
+        guard sqlite3_open_v2(path, &connection, flags, nil) == SQLITE_OK, let connection else {
+            let message = connection.map { String(cString: sqlite3_errmsg($0)) } ?? "unknown error"
             throw SetappError.databaseQueryFailed(message: message)
         }
 
-        return db
+        return connection
     }
 
     /// Find an app by name (case-insensitive).
-    static func getAppByName(_ name: String, db: OpaquePointer? = nil) throws -> SetappApp? {
-        let database = try db ?? connect()
-        defer { if db == nil { sqlite3_close(database) } }
+    static func getAppByName(_ name: String, connection: OpaquePointer? = nil) throws -> SetappApp? {
+        let database = try connection ?? connect()
+        defer { if connection == nil { sqlite3_close(database) } }
 
         let sql = """
             SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
@@ -52,9 +52,9 @@ enum Database {
     }
 
     /// Return all available apps sorted by name.
-    static func getAvailableApps(db: OpaquePointer? = nil) throws -> [SetappApp] {
-        let database = try db ?? connect()
-        defer { if db == nil { sqlite3_close(database) } }
+    static func getAvailableApps(connection: OpaquePointer? = nil) throws -> [SetappApp] {
+        let database = try connection ?? connect()
+        defer { if connection == nil { sqlite3_close(database) } }
 
         let sql = """
             SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
