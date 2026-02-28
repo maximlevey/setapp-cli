@@ -20,7 +20,7 @@ uninstall:		## Remove the installed binary
 
 clean:			## Remove build artifacts
 	swift package clean
-	
+
 lint:			## Run linting tools
 	swiftlint --strict
 	swiftformat .

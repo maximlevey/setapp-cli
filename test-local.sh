@@ -120,8 +120,8 @@ fi
 
 # --- bundle edit (creates file) ---
 EDIT_TMP="$TMPDIR_TEST/edit-test/bundle"
-EDITOR=true "$CLI" bundle edit --file "$EDIT_TMP" 2>/dev/null
-if grep -q "# setapp bundle" "$EDIT_TMP" 2>/dev/null; then
+EDITOR=true "$CLI" bundle edit --file "$EDIT_TMP" 2>/dev/null || true
+if grep -q "^# setapp bundle" "$EDIT_TMP" 2>/dev/null; then
     pass "bundle edit creates file with header"
 else
     fail "bundle edit creates file with header"
@@ -136,7 +136,6 @@ else
 fi
 
 # --- debug flag ---
-DEBUG_OUT=$("$CLI" list -d 2>/dev/null) || true
 DEBUG_ERR=$("$CLI" list -d 2>&1 1>/dev/null) || true
 if echo "$DEBUG_ERR" | grep -q "\[debug\]"; then
     pass "list -d writes debug to stderr"
@@ -240,7 +239,7 @@ if $E2E; then
         fi
 
         # --- verify One Switch still on disk after reinstall ---
-        if ls "$SETAPP_DIR"/One\ Switch.app >/dev/null 2>&1; then
+        if ls "$SETAPP_DIR/One Switch.app" >/dev/null 2>&1; then
             pass "One Switch.app exists after reinstall"
         else
             fail "One Switch.app exists after reinstall"
