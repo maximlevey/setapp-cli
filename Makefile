@@ -1,6 +1,7 @@
 BINARY := setapp-cli
 FRAMEWORKS_DIR := $(HOME)/Library/Application Support/Setapp/LaunchAgents/Setapp.app/Contents/Frameworks
 BUILD_DIR := $(shell swift build --configuration release --arch arm64 --arch x86_64 --show-bin-path 2>/dev/null)
+BIN_DIR ?= $(HOME)/.local/bin
 
 .DEFAULT_GOAL := help
 
@@ -10,12 +11,12 @@ build:			## Build the release binary (universal)
 	swift build --configuration release --arch arm64 --arch x86_64 \
 		-Xlinker -rpath -Xlinker "$(FRAMEWORKS_DIR)"
 
-install: build		## Build and install to /usr/local/bin
-	install -d /usr/local/bin
-	install -m 755 "$(BUILD_DIR)/$(BINARY)" "/usr/local/bin/$(BINARY)"
+install: build		## Build and install to ~/.local/bin (override with BIN_DIR=)
+	mkdir -p "$(BIN_DIR)"
+	install -m 755 "$(BUILD_DIR)/$(BINARY)" "$(BIN_DIR)/$(BINARY)"
 
 uninstall:		## Remove the installed binary
-	rm -f "/usr/local/bin/$(BINARY)"
+	rm -f "$(BIN_DIR)/$(BINARY)"
 
 clean:			## Remove build artifacts
 	swift package clean
