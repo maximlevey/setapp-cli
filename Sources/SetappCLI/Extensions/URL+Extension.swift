@@ -21,7 +21,7 @@ extension URL {
     static var setappAppsDirectories: [URL] {
         [
             URL(fileURLWithPath: "/Applications/Setapp"),
-            homeDirectory.appendingPathComponent("Applications/Setapp"),
+            homeDirectory.appendingPathComponent("Applications/Setapp")
         ]
     }
 

@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 struct ReinstallCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(
+    static let configuration: CommandConfiguration = .init(
         commandName: "reinstall",
         abstract: "Uninstall then reinstall a Setapp app."
     )

@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 struct BundleInstallCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(
+    static let configuration: CommandConfiguration = .init(
         commandName: "install",
         abstract: "Install all apps from a bundle file."
     )
@@ -13,13 +13,13 @@ struct BundleInstallCommand: ParsableCommand {
     var file: String?
 
     @Flag(name: .long, help: "Remove the non-Setapp version from /Applications after install.")
-    var replace = false
+    var replace: Bool = false
 
     mutating func run() throws {
         globals.apply()
 
-        let path = BundleFile.resolvePath(flagValue: file)
-        let names = try BundleFile.parse(at: path)
+        let path: URL = BundleFile.resolvePath(flagValue: file)
+        let names: [String] = try BundleFile.parse(at: path)
 
         if names.isEmpty {
             Printer.warning("Bundle file is empty: \(path.path)")
@@ -39,7 +39,7 @@ struct BundleInstallCommand: ParsableCommand {
                 continue
             }
 
-            let replacePath = replace ? SetappDetector.findNonSetappApp(named: appInfo.name) : nil
+            let replacePath: URL? = replace ? SetappDetector.findNonSetappApp(named: appInfo.name) : nil
 
             do {
                 try XPCService.install(appID: appInfo.identifier)

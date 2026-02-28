@@ -1,5 +1,6 @@
 import Foundation
 
+/// Bundle file read/write operations.
 enum BundleFile {
     /// Resolve bundle file path from flag value, env var, or default.
     static func resolvePath(flagValue: String?) -> URL {
@@ -18,7 +19,7 @@ enum BundleFile {
             throw SetappError.bundleFileNotFound(path: path.path)
         }
 
-        let content = try String(contentsOf: path, encoding: .utf8)
+        let content: String = try String(contentsOf: path, encoding: .utf8)
         return content
             .components(separatedBy: .newlines)
             .map { $0.components(separatedBy: "#").first ?? "" }
@@ -33,23 +34,23 @@ enum BundleFile {
             withIntermediateDirectories: true
         )
 
-        let formatter = DateFormatter()
+        let formatter: DateFormatter = .init()
         formatter.dateFormat = "yyyy-MM-dd"
-        let today = formatter.string(from: Date())
+        let today: String = formatter.string(from: Date())
 
-        let sorted = names.sorted {
+        let sorted: [String] = names.sorted {
             $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
         }
 
-        var lines = [
+        var lines: [String] = [
             "# setapp bundle -- \(today)",
             "# Run `setapp bundle install` to reinstall on a new Mac.",
-            "",
+            ""
         ]
         lines.append(contentsOf: sorted)
         lines.append("")
 
-        let content = lines.joined(separator: "\n")
+        let content: String = lines.joined(separator: "\n")
         try content.write(to: path, atomically: true, encoding: .utf8)
     }
 }

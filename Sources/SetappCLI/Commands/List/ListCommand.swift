@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 struct ListCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(
+    static let configuration: CommandConfiguration = .init(
         commandName: "list",
         abstract: "List installed Setapp apps."
     )
@@ -12,7 +12,7 @@ struct ListCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        let apps = try Database.getAvailableApps()
+        let apps: [SetappApp] = try Database.getAvailableApps()
         for app in apps where SetappDetector.isInstalled(app.name) {
             Printer.log(app.name)
         }

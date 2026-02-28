@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 struct BundleCleanupCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(
+    static let configuration: CommandConfiguration = .init(
         commandName: "cleanup",
         abstract: "Uninstall Setapp apps not listed in the bundle file."
     )
@@ -15,12 +15,12 @@ struct BundleCleanupCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        let path = BundleFile.resolvePath(flagValue: file)
-        let names = try BundleFile.parse(at: path)
-        let bundleSet = Set(names.map { $0.lowercased() })
+        let path: URL = BundleFile.resolvePath(flagValue: file)
+        let names: [String] = try BundleFile.parse(at: path)
+        let bundleSet: Set<String> = Set(names.map { $0.lowercased() })
 
-        let installed = SetappDetector.installedAppNames()
-        let extras = installed.filter { !bundleSet.contains($0.lowercased()) }
+        let installed: [String] = SetappDetector.installedAppNames()
+        let extras: [String] = installed.filter { !bundleSet.contains($0.lowercased()) }
 
         if extras.isEmpty {
             Printer.log("Nothing to clean up.")

@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 struct InstallCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(
+    static let configuration: CommandConfiguration = .init(
         commandName: "install",
         abstract: "Install a Setapp app by name."
     )
@@ -13,7 +13,7 @@ struct InstallCommand: ParsableCommand {
     var app: String
 
     @Flag(name: .long, help: "Remove the non-Setapp version from /Applications after install.")
-    var replace = false
+    var replace: Bool = false
 
     mutating func run() throws {
         globals.apply()
@@ -29,7 +29,7 @@ struct InstallCommand: ParsableCommand {
 
         Printer.info("Installing \(appInfo.name)")
 
-        let replacePath = replace ? SetappDetector.findNonSetappApp(named: appInfo.name) : nil
+        let replacePath: URL? = replace ? SetappDetector.findNonSetappApp(named: appInfo.name) : nil
         if let path = replacePath {
             Printer.verbose("Will replace \(path.path) after install")
         }

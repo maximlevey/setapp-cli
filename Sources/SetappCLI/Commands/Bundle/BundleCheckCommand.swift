@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 struct BundleCheckCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(
+    static let configuration: CommandConfiguration = .init(
         commandName: "check",
         abstract: "Check that all bundle apps are installed (exit 1 if any missing)."
     )
@@ -15,9 +15,9 @@ struct BundleCheckCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        let path = BundleFile.resolvePath(flagValue: file)
-        let names = try BundleFile.parse(at: path)
-        let missing = names.filter { !SetappDetector.isInstalled($0) }
+        let path: URL = BundleFile.resolvePath(flagValue: file)
+        let names: [String] = try BundleFile.parse(at: path)
+        let missing: [String] = names.filter { !SetappDetector.isInstalled($0) }
 
         if missing.isEmpty {
             Printer.log("All bundle apps are installed.")

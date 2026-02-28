@@ -3,10 +3,10 @@ import Foundation
 
 struct GlobalOptions: ParsableArguments {
     @Flag(name: .shortAndLong, help: "Enable verbose output.")
-    var verbose = false
+    var verbose: Bool = false
 
     @Flag(name: .shortAndLong, help: "Enable debug output (or set SETAPP_DEBUG=1).")
-    var debug = false
+    var debug: Bool = false
 
     /// Apply these flags to the global Printer state.
     func apply() {

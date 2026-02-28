@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 struct BundleListCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(
+    static let configuration: CommandConfiguration = .init(
         commandName: "list",
         abstract: "List apps in the bundle file."
     )
@@ -15,8 +15,8 @@ struct BundleListCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        let path = BundleFile.resolvePath(flagValue: file)
-        let names = try BundleFile.parse(at: path)
+        let path: URL = BundleFile.resolvePath(flagValue: file)
+        let names: [String] = try BundleFile.parse(at: path)
         for name in names {
             Printer.log(name)
         }

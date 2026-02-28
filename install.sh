@@ -9,15 +9,15 @@ TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT INT TERM
 
 VERSION="$(
-  curl -fsSL -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/${REPO}/releases/latest" \
-  | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
-  | head -n1
+	curl -fsSL -H "Accept: application/vnd.github+json" \
+		"https://api.github.com/repos/${REPO}/releases/latest" |
+		sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' |
+		head -n1
 )" || true
 
 if [[ -z "$VERSION" ]]; then
-  print -u2 "Error: cannot determine latest version"
-  exit 1
+	print -u2 "Error: cannot determine latest version"
+	exit 1
 fi
 
 ASSET="${BINARY}-${VERSION}-macos-universal.tar.gz"

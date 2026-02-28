@@ -1,7 +1,7 @@
 import ArgumentParser
 
 struct BundleCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(
+    static let configuration: CommandConfiguration = .init(
         commandName: "bundle",
         abstract: "Manage bundle files for saving and restoring app lists.",
         discussion: """
@@ -17,7 +17,7 @@ struct BundleCommand: ParsableCommand {
             BundleListCommand.self,
             BundleCheckCommand.self,
             BundleCleanupCommand.self,
-            BundleEditCommand.self,
+            BundleEditCommand.self
         ]
     )
 }

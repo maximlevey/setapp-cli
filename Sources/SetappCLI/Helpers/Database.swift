@@ -1,20 +1,21 @@
 import Foundation
 import SQLite3
 
+/// Setapp SQLite database access layer.
 enum Database {
     /// Open the Setapp SQLite database (read-only).
     static func connect() throws -> OpaquePointer {
-        let path = URL.setappDatabase.path
+        let path: String = URL.setappDatabase.path
 
         guard FileManager.default.fileExists(atPath: path) else {
             throw SetappError.databaseNotFound(path: path)
         }
 
         var connection: OpaquePointer?
-        let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX
+        let flags: Int32 = SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX
 
         guard sqlite3_open_v2(path, &connection, flags, nil) == SQLITE_OK, let connection else {
-            let message = connection.map { String(cString: sqlite3_errmsg($0)) } ?? "unknown error"
+            let message: String = connection.map { String(cString: sqlite3_errmsg($0)) } ?? "unknown error"
             throw SetappError.databaseQueryFailed(message: message)
         }
 
@@ -23,10 +24,10 @@ enum Database {
 
     /// Find an app by name (case-insensitive).
     static func getAppByName(_ name: String, connection: OpaquePointer? = nil) throws -> SetappApp? {
-        let database = try connection ?? connect()
+        let database: OpaquePointer = try connection ?? connect()
         defer { if connection == nil { sqlite3_close(database) } }
 
-        let sql = """
+        let sql: String = """
         SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
         WHERE ZBUNDLEIDENTIFIER IS NOT NULL AND LOWER(ZNAME) = LOWER(?)
         """
@@ -41,7 +42,9 @@ enum Database {
 
         sqlite3_bind_text(stmt, 1, (name as NSString).utf8String, -1, nil)
 
-        guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+        guard sqlite3_step(stmt) == SQLITE_ROW else {
+            return nil
+        }
 
         return SetappApp(
             name: String(cString: sqlite3_column_text(stmt, 0)),
@@ -52,10 +55,10 @@ enum Database {
 
     /// Return all available apps sorted by name.
     static func getAvailableApps(connection: OpaquePointer? = nil) throws -> [SetappApp] {
-        let database = try connection ?? connect()
+        let database: OpaquePointer = try connection ?? connect()
         defer { if connection == nil { sqlite3_close(database) } }
 
-        let sql = """
+        let sql: String = """
         SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
         WHERE ZBUNDLEIDENTIFIER IS NOT NULL ORDER BY LOWER(ZNAME)
         """
