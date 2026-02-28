@@ -1,6 +1,6 @@
 import Foundation
 
-enum SetappError: LocalizedError, CustomStringConvertible {
+enum SetappError: LocalizedError, CustomStringConvertible, Equatable {
     case appNotFound(name: String)
     case appNotInstalled(name: String)
     case appAlreadyInstalled(name: String)

@@ -2,10 +2,23 @@
 import XCTest
 
 final class SetappEnvironmentTests: XCTestCase {
-    /// Verifies that the mock no-op installed by CommandTestCase actually no-ops.
-    func testVerifyEnvironmentDefaultIsLive() {
+    override func tearDown() {
         Dependencies.reset()
-        XCTAssertNotNil(Dependencies.verifyEnvironment as Any)
+        super.tearDown()
+    }
+
+    /// Verifies that Dependencies.reset() restores verifyEnvironment to the live implementation.
+    func testResetRestoresVerifyEnvironmentToLive() {
+        // Install a sentinel so we can detect if it's called
+        var sentinelRan = false
+        Dependencies.verifyEnvironment = { sentinelRan = true }
+
+        // Reset should replace the sentinel with the live implementation
+        Dependencies.reset()
+
+        // Call the restored verifier — the sentinel must NOT run
+        _ = try? Dependencies.verifyEnvironment()
+        XCTAssertFalse(sentinelRan, "Dependencies.reset() did not restore the live verifyEnvironment")
     }
 
     /// Verifies that substituting a throwing closure propagates the error.
@@ -14,10 +27,7 @@ final class SetappEnvironmentTests: XCTestCase {
         Dependencies.verifyEnvironment = { throw expected }
 
         XCTAssertThrowsError(try Dependencies.verifyEnvironment()) { error in
-            XCTAssertEqual(error.localizedDescription, expected.localizedDescription)
+            XCTAssertEqual(error as? SetappError, expected)
         }
-
-        // Clean up
-        Dependencies.reset()
     }
 }
