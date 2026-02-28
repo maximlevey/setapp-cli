@@ -4,7 +4,7 @@ import Foundation
 struct BundleCleanupCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "cleanup",
-        abstract: "Uninstall Setapp apps not listed in the bundle file."
+        abstract: "Uninstall Setapp apps not listed in the AppList file."
     )
 
     @OptionGroup var globals: GlobalOptions

@@ -4,7 +4,7 @@ import Foundation
 struct BundleDumpCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "dump",
-        abstract: "Write installed apps to a bundle file."
+        abstract: "Write installed apps to a AppList file."
     )
 
     @OptionGroup var globals: GlobalOptions

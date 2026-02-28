@@ -4,7 +4,7 @@ import Foundation
 struct BundleEditCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "edit",
-        abstract: "Open the bundle file in $EDITOR (or 'open' if unset)."
+        abstract: "Open the AppList file in $EDITOR (or 'open' if unset)."
     )
 
     @OptionGroup var globals: GlobalOptions

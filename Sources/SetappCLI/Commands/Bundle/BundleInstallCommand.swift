@@ -4,7 +4,7 @@ import Foundation
 struct BundleInstallCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "install",
-        abstract: "Install all apps from a bundle file."
+        abstract: "Install all apps from a AppList file."
     )
 
     @OptionGroup var globals: GlobalOptions
