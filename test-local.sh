@@ -1,270 +1,319 @@
 #!/usr/bin/env bash
+#
+# Local functional tests for setapp-cli.
+# Builds the debug binary and runs assertions against a live Setapp
+# installation. Runs the full test suite including XPC install/remove
+# by default.
+#
+# Usage: ./test-local.sh [--read-only]
+#   --read-only  Skip destructive XPC tests (install/remove)
+
 set -euo pipefail
 
-# --- Colors ---
-GREEN=$'\033[0;32m'
-RED=$'\033[0;31m'
-YELLOW=$'\033[0;33m'
-BOLD=$'\033[1m'
-RESET=$'\033[0m'
+# --- Constants ---
+readonly GREEN=$'\033[0;32m'
+readonly RED=$'\033[0;31m'
+readonly YELLOW=$'\033[0;33m'
+readonly BOLD=$'\033[1m'
+readonly RESET=$'\033[0m'
 
-PASS=0
-FAIL=0
-SKIP=0
+readonly CLI='.build/debug/setapp-cli'
+readonly DB="${HOME}/Library/Application Support"\
+'/Setapp/Default/Databases/Apps.sqlite'
+readonly SETAPP_DIR='/Applications/Setapp'
 
-pass() { ((PASS++)); printf "  ${GREEN}PASS${RESET} %s\n" "$1"; }
-fail() { ((FAIL++)); printf "  ${RED}FAIL${RESET} %s\n" "$1"; }
-skip() { ((SKIP++)); printf "  ${YELLOW}SKIP${RESET} %s\n" "$1"; }
+# --- Counters ---
+pass_count=0
+fail_count=0
+skip_count=0
 
-# --- Temp dir ---
-TMPDIR_TEST="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR_TEST"' EXIT
+# Prints a PASS result and increments the counter.
+pass() {
+  (( pass_count++ ))
+  printf '  %sPASS%s %s\n' "${GREEN}" "${RESET}" "$1"
+}
 
-# --- Pre-flight ---
-CLI=".build/debug/setapp-cli"
-DB="$HOME/Library/Application Support/Setapp/Default/Databases/Apps.sqlite"
-SETAPP_DIR="/Applications/Setapp"
+# Prints a FAIL result and increments the counter.
+fail() {
+  (( fail_count++ ))
+  printf '  %sFAIL%s %s\n' "${RED}" "${RESET}" "$1"
+}
 
-printf "\n${BOLD}==> Pre-flight checks${RESET}\n"
+# Prints a SKIP result and increments the counter.
+skip() {
+  (( skip_count++ ))
+  printf '  %sSKIP%s %s\n' "${YELLOW}" "${RESET}" "$1"
+}
 
-if [[ ! -f "$DB" ]]; then
-    printf "${RED}Setapp database not found at %s${RESET}\n" "$DB"
+# Removes test apps installed during E2E tests.
+cleanup_e2e() {
+  printf '\n%s==> E2E Cleanup%s\n' "${BOLD}" "${RESET}"
+  "${CLI}" remove Lungo 2>/dev/null || true
+  "${CLI}" remove 'One Switch' 2>/dev/null || true
+  printf '  Cleaned up test apps.\n'
+}
+
+# Verifies Setapp installation prerequisites and exits on failure.
+preflight_checks() {
+  printf '\n%s==> Pre-flight checks%s\n' "${BOLD}" "${RESET}"
+
+  if [[ ! -f "${DB}" ]]; then
+    printf '%sSetapp database not found at %s%s\n' \
+      "${RED}" "${DB}" "${RESET}" >&2
     exit 1
-fi
+  fi
 
-if [[ ! -d "$SETAPP_DIR" ]]; then
-    printf "${RED}Setapp apps directory not found at %s${RESET}\n" "$SETAPP_DIR"
+  if [[ ! -d "${SETAPP_DIR}" ]]; then
+    printf '%sSetapp apps directory not found at %s%s\n' \
+      "${RED}" "${SETAPP_DIR}" "${RESET}" >&2
     exit 1
-fi
+  fi
 
-printf "  Database: %s\n" "$DB"
-printf "  Apps dir: %s\n" "$SETAPP_DIR"
+  printf '  Database: %s\n' "${DB}"
+  printf '  Apps dir: %s\n' "${SETAPP_DIR}"
+}
 
-# --- Build ---
-printf "\n${BOLD}==> Building${RESET}\n"
-swift build 2>&1 | tail -1
+# Builds the debug binary and exits on failure.
+build_binary() {
+  printf '\n%s==> Building%s\n' "${BOLD}" "${RESET}"
+  swift build 2>&1 | tail -1
 
-if [[ ! -x "$CLI" ]]; then
-    printf "${RED}Binary not found at %s${RESET}\n" "$CLI"
+  if [[ ! -x "${CLI}" ]]; then
+    printf '%sBinary not found at %s%s\n' "${RED}" "${CLI}" "${RESET}" >&2
     exit 1
-fi
+  fi
 
-printf "  Binary: %s\n\n" "$CLI"
-# ============================================================
-# Tier 1: Read-only tests
-# ============================================================
-printf "${BOLD}==> Tier 1: Read-only tests${RESET}\n"
+  printf '  Binary: %s\n\n' "${CLI}"
+}
 
-# --- Binary basics ---
-if "$CLI" --version 2>&1 | grep -q "2.0.0"; then
-    pass "--version prints version"
-else
-    fail "--version prints version"
-fi
+# Runs read-only tests: no installs, removals, or filesystem side effects.
+run_read_only_tests() {
+  local bundle_tmp="${tmpdir_test}/test-bundle"
+  local edit_tmp="${tmpdir_test}/edit-test/bundle"
+  local list_out dump_list verbose_out debug_err
 
-if "$CLI" --help 2>&1 | grep -q "SUBCOMMANDS"; then
-    pass "--help shows subcommands"
-else
-    fail "--help shows subcommands"
-fi
+  printf '%s==> Tier 1: Read-only tests%s\n' "${BOLD}" "${RESET}"
 
-# --- list ---
-LIST_OUT=$("$CLI" list 2>&1) || true
-if echo "$LIST_OUT" | grep -q "Proxyman\|CleanMyMac\|CleanShot"; then
-    pass "list shows installed apps"
-else
-    fail "list shows installed apps"
-fi
+  # --- Binary basics ---
+  if "${CLI}" --version 2>&1 | grep -q '2.0.0'; then
+    pass '--version prints version'
+  else
+    fail '--version prints version'
+  fi
 
-# --- check ---
-if "$CLI" check >/dev/null 2>&1; then
-    pass "check exits 0"
-else
-    fail "check exits 0"
-fi
+  if "${CLI}" --help 2>&1 | grep -q 'SUBCOMMANDS'; then
+    pass '--help shows subcommands'
+  else
+    fail '--help shows subcommands'
+  fi
 
-# --- dump --list ---
-DUMP_LIST=$("$CLI" dump --list 2>&1) || true
-if echo "$DUMP_LIST" | grep -q "Proxyman\|CleanMyMac\|CleanShot"; then
-    pass "dump --list prints installed app names"
-else
-    fail "dump --list prints installed app names"
-fi
+  # --- list ---
+  list_out=$("${CLI}" list 2>&1) || true
+  if echo "${list_out}" | grep -q 'Proxyman\|CleanMyMac\|CleanShot'; then
+    pass 'list shows installed apps'
+  else
+    fail 'list shows installed apps'
+  fi
 
-# --- dump --file ---
-BUNDLE_TMP="$TMPDIR_TEST/test-bundle"
-if "$CLI" dump --file "$BUNDLE_TMP" >/dev/null 2>&1; then
-    pass "dump --file exits 0"
-else
-    fail "dump --file exits 0"
-fi
+  # --- check ---
+  if "${CLI}" check >/dev/null 2>&1; then
+    pass 'check exits 0'
+  else
+    fail 'check exits 0'
+  fi
 
-if grep -q "^# setapp bundle" "$BUNDLE_TMP" 2>/dev/null; then
-    pass "dump --file writes header comment"
-else
-    fail "dump --file writes header comment"
-fi
+  # --- dump --list ---
+  dump_list=$("${CLI}" dump --list 2>&1) || true
+  if echo "${dump_list}" | grep -q 'Proxyman\|CleanMyMac\|CleanShot'; then
+    pass 'dump --list prints installed app names'
+  else
+    fail 'dump --list prints installed app names'
+  fi
 
-if grep -qi "proxyman\|cleanmymac\|cleanshot" "$BUNDLE_TMP" 2>/dev/null; then
-    pass "dump --file contains app names"
-else
-    fail "dump --file contains app names"
-fi
+  # --- dump --file ---
+  if "${CLI}" dump --file "${bundle_tmp}" >/dev/null 2>&1; then
+    pass 'dump --file exits 0'
+  else
+    fail 'dump --file exits 0'
+  fi
 
-# --- bundle check ---
-if "$CLI" bundle check --file "$BUNDLE_TMP" >/dev/null 2>&1; then
-    pass "bundle check passes on freshly-dumped bundle"
-else
-    fail "bundle check passes on freshly-dumped bundle"
-fi
+  if grep -q '^# setapp bundle' "${bundle_tmp}" 2>/dev/null; then
+    pass 'dump --file writes header comment'
+  else
+    fail 'dump --file writes header comment'
+  fi
 
-# --- bundle edit (creates file) ---
-EDIT_TMP="$TMPDIR_TEST/edit-test/bundle"
-EDITOR=true "$CLI" bundle edit --file "$EDIT_TMP" 2>/dev/null || true
-if grep -q "^# setapp bundle" "$EDIT_TMP" 2>/dev/null; then
-    pass "bundle edit creates file with header"
-else
-    fail "bundle edit creates file with header"
-fi
+  if grep -qi 'proxyman\|cleanmymac\|cleanshot' "${bundle_tmp}" 2>/dev/null; then
+    pass 'dump --file contains app names'
+  else
+    fail 'dump --file contains app names'
+  fi
 
-# --- verbose flag ---
-VERBOSE_OUT=$("$CLI" list -v 2>&1) || true
-if [ ${#VERBOSE_OUT} -gt 0 ]; then
-    pass "list -v produces output"
-else
-    fail "list -v produces output"
-fi
+  # --- bundle check ---
+  if "${CLI}" bundle check --file "${bundle_tmp}" >/dev/null 2>&1; then
+    pass 'bundle check passes on freshly-dumped bundle'
+  else
+    fail 'bundle check passes on freshly-dumped bundle'
+  fi
 
-# --- debug flag ---
-DEBUG_ERR=$("$CLI" list -d 2>&1 1>/dev/null) || true
-if echo "$DEBUG_ERR" | grep -q "\[debug\]"; then
-    pass "list -d writes debug to stderr"
-else
-    fail "list -d writes debug to stderr"
-fi
+  # --- bundle edit (creates file) ---
+  EDITOR=true "${CLI}" bundle edit --file "${edit_tmp}" 2>/dev/null || true
+  if grep -q '^# setapp bundle' "${edit_tmp}" 2>/dev/null; then
+    pass 'bundle edit creates file with header'
+  else
+    fail 'bundle edit creates file with header'
+  fi
 
-# --- error: install nonexistent ---
-if "$CLI" install NonExistentApp123 2>/dev/null; then
-    fail "install nonexistent app exits non-zero"
-else
-    pass "install nonexistent app exits non-zero"
-fi
+  # --- verbose flag ---
+  verbose_out=$("${CLI}" list -v 2>&1) || true
+  if [[ ${#verbose_out} -gt 0 ]]; then
+    pass 'list -v produces output'
+  else
+    fail 'list -v produces output'
+  fi
 
-# --- error: remove nonexistent ---
-if "$CLI" remove NonExistentApp123 2>/dev/null; then
-    fail "remove nonexistent app exits non-zero"
-else
-    pass "remove nonexistent app exits non-zero"
-fi
+  # --- debug flag ---
+  debug_err=$("${CLI}" list -d 2>&1 1>/dev/null) || true
+  if echo "${debug_err}" | grep -q '\[debug\]'; then
+    pass 'list -d writes debug to stderr'
+  else
+    fail 'list -d writes debug to stderr'
+  fi
 
-# --- error: bundle check missing file ---
-if "$CLI" bundle check --file /nonexistent/path/bundle 2>/dev/null; then
-    fail "bundle check missing file exits non-zero"
-else
-    pass "bundle check missing file exits non-zero"
-fi
+  # --- error: install nonexistent ---
+  if "${CLI}" install NonExistentApp123 2>/dev/null; then
+    fail 'install nonexistent app exits non-zero'
+  else
+    pass 'install nonexistent app exits non-zero'
+  fi
 
-# ============================================================
-# Tier 2: End-to-end XPC tests (opt-in)
-# ============================================================
-E2E=false
-for arg in "$@"; do
-    [[ "$arg" == "--e2e" ]] && E2E=true
-done
+  # --- error: remove nonexistent ---
+  if "${CLI}" remove NonExistentApp123 2>/dev/null; then
+    fail 'remove nonexistent app exits non-zero'
+  else
+    pass 'remove nonexistent app exits non-zero'
+  fi
 
-if $E2E; then
-    printf "\n${BOLD}==> Tier 2: End-to-end XPC tests${RESET}\n"
-    printf "${YELLOW}This will install and remove real Setapp apps (Lungo, One Switch).${RESET}\n"
-    printf "Continue? [y/N] "
-    read -r confirm
-    if [[ "$confirm" != [yY] ]]; then
-        printf "Skipped E2E tests.\n"
-    else
-        # Cleanup function -- remove test apps regardless of outcome
-        cleanup_e2e() {
-            printf "\n${BOLD}==> E2E Cleanup${RESET}\n"
-            "$CLI" remove Lungo 2>/dev/null || true
-            "$CLI" remove "One Switch" 2>/dev/null || true
-            printf "  Cleaned up test apps.\n"
-        }
-        trap 'cleanup_e2e; rm -rf "$TMPDIR_TEST"' EXIT
+  # --- error: bundle check missing file ---
+  if "${CLI}" bundle check --file /nonexistent/path/bundle 2>/dev/null; then
+    fail 'bundle check missing file exits non-zero'
+  else
+    pass 'bundle check missing file exits non-zero'
+  fi
+}
 
-        # --- install Lungo ---
-        if "$CLI" install Lungo 2>&1 | grep -qi "installed\|already installed"; then
-            pass "install Lungo succeeds"
-        else
-            fail "install Lungo succeeds"
-        fi
+# Runs destructive XPC tests: installs and removes real Setapp apps.
+run_e2e_tests() {
+  printf '\n%s==> Tier 2: End-to-end XPC tests%s\n' "${BOLD}" "${RESET}"
+  trap 'cleanup_e2e; rm -rf "${tmpdir_test}"' EXIT
 
-        # --- verify Lungo appears in list ---
-        if "$CLI" list 2>&1 | grep -q "Lungo"; then
-            pass "Lungo appears in list after install"
-        else
-            fail "Lungo appears in list after install"
-        fi
+  # --- install Lungo ---
+  if "${CLI}" install Lungo 2>&1 | grep -qi 'installed\|already installed'; then
+    pass 'install Lungo succeeds'
+  else
+    fail 'install Lungo succeeds'
+  fi
 
-        # --- verify Lungo on disk ---
-        if ls "$SETAPP_DIR"/Lungo.app >/dev/null 2>&1; then
-            pass "Lungo.app exists in $SETAPP_DIR"
-        else
-            fail "Lungo.app exists in $SETAPP_DIR"
-        fi
+  # --- verify Lungo appears in list ---
+  if "${CLI}" list 2>&1 | grep -q 'Lungo'; then
+    pass 'Lungo appears in list after install'
+  else
+    fail 'Lungo appears in list after install'
+  fi
 
-        # --- remove Lungo ---
-        if "$CLI" remove Lungo 2>&1 | grep -qi "removed"; then
-            pass "remove Lungo succeeds"
-        else
-            fail "remove Lungo succeeds"
-        fi
+  # --- verify Lungo on disk ---
+  if ls "${SETAPP_DIR}/Lungo.app" >/dev/null 2>&1; then
+    pass "Lungo.app exists in ${SETAPP_DIR}"
+  else
+    fail "Lungo.app exists in ${SETAPP_DIR}"
+  fi
 
-        # --- verify Lungo gone from disk ---
-        if ! ls "$SETAPP_DIR"/Lungo.app >/dev/null 2>&1; then
-            pass "Lungo.app removed from $SETAPP_DIR"
-        else
-            fail "Lungo.app removed from $SETAPP_DIR"
-        fi
+  # --- remove Lungo ---
+  if "${CLI}" remove Lungo 2>&1 | grep -qi 'removed'; then
+    pass 'remove Lungo succeeds'
+  else
+    fail 'remove Lungo succeeds'
+  fi
 
-        # --- install One Switch for reinstall test ---
-        if "$CLI" install "One Switch" 2>&1 | grep -qi "installed\|already installed"; then
-            pass "install One Switch succeeds"
-        else
-            fail "install One Switch succeeds"
-        fi
+  # --- verify Lungo gone from disk ---
+  if ! ls "${SETAPP_DIR}/Lungo.app" >/dev/null 2>&1; then
+    pass "Lungo.app removed from ${SETAPP_DIR}"
+  else
+    fail "Lungo.app removed from ${SETAPP_DIR}"
+  fi
 
-        # --- reinstall One Switch ---
-        if "$CLI" reinstall "One Switch" 2>&1 | grep -qi "installed"; then
-            pass "reinstall One Switch succeeds"
-        else
-            fail "reinstall One Switch succeeds"
-        fi
+  # --- install One Switch for reinstall test ---
+  if "${CLI}" install 'One Switch' 2>&1 \
+      | grep -qi 'installed\|already installed'; then
+    pass 'install One Switch succeeds'
+  else
+    fail 'install One Switch succeeds'
+  fi
 
-        # --- verify One Switch still on disk after reinstall ---
-        if ls "$SETAPP_DIR/One Switch.app" >/dev/null 2>&1; then
-            pass "One Switch.app exists after reinstall"
-        else
-            fail "One Switch.app exists after reinstall"
-        fi
+  # --- reinstall One Switch ---
+  if "${CLI}" reinstall 'One Switch' 2>&1 | grep -qi 'installed'; then
+    pass 'reinstall One Switch succeeds'
+  else
+    fail 'reinstall One Switch succeeds'
+  fi
 
-        # --- remove One Switch (cleanup) ---
-        if "$CLI" remove "One Switch" 2>&1 | grep -qi "removed"; then
-            pass "remove One Switch succeeds"
-        else
-            fail "remove One Switch succeeds"
-        fi
-    fi
-fi
+  # --- verify One Switch still on disk after reinstall ---
+  if ls "${SETAPP_DIR}/One Switch.app" >/dev/null 2>&1; then
+    pass 'One Switch.app exists after reinstall'
+  else
+    fail 'One Switch.app exists after reinstall'
+  fi
 
-# ============================================================
-# Summary
-# ============================================================
-printf "\n${BOLD}==> Results${RESET}\n"
-printf "  ${GREEN}%d passed${RESET}" "$PASS"
-if [[ $FAIL -gt 0 ]]; then
-    printf ", ${RED}%d failed${RESET}" "$FAIL"
-fi
-if [[ $SKIP -gt 0 ]]; then
-    printf ", ${YELLOW}%d skipped${RESET}" "$SKIP"
-fi
-printf "\n\n"
+  # --- remove One Switch (cleanup) ---
+  if "${CLI}" remove 'One Switch' 2>&1 | grep -qi 'removed'; then
+    pass 'remove One Switch succeeds'
+  else
+    fail 'remove One Switch succeeds'
+  fi
+}
 
-[[ $FAIL -eq 0 ]]
+# Prints the final pass/fail/skip summary.
+print_summary() {
+  printf '\n%s==> Results%s\n' "${BOLD}" "${RESET}"
+  printf '  %s%d passed%s' "${GREEN}" "${pass_count}" "${RESET}"
+  if [[ ${fail_count} -gt 0 ]]; then
+    printf ', %s%d failed%s' "${RED}" "${fail_count}" "${RESET}"
+  fi
+  if [[ ${skip_count} -gt 0 ]]; then
+    printf ', %s%d skipped%s' "${YELLOW}" "${skip_count}" "${RESET}"
+  fi
+  printf '\n\n'
+}
+
+main() {
+  local read_only=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --read-only)
+        read_only=true
+        ;;
+      *)
+        printf 'Unknown flag: %s\n' "$1" >&2
+        exit 1
+        ;;
+    esac
+    shift
+  done
+
+  tmpdir_test="$(mktemp -d)"
+  trap 'rm -rf "${tmpdir_test}"' EXIT
+
+  preflight_checks
+  build_binary
+  run_read_only_tests
+
+  if [[ "${read_only}" == 'false' ]]; then
+    run_e2e_tests
+  fi
+
+  print_summary
+  [[ ${fail_count} -eq 0 ]]
+}
+
+main "$@"
