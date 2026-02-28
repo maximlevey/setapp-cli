@@ -2,7 +2,6 @@ import Foundation
 import SQLite3
 
 enum Database {
-
     /// Open the Setapp SQLite database (read-only).
     static func connect() throws -> OpaquePointer {
         let path = URL.setappDatabase.path
@@ -28,9 +27,9 @@ enum Database {
         defer { if connection == nil { sqlite3_close(database) } }
 
         let sql = """
-            SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
-            WHERE ZBUNDLEIDENTIFIER IS NOT NULL AND LOWER(ZNAME) = LOWER(?)
-            """
+        SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
+        WHERE ZBUNDLEIDENTIFIER IS NOT NULL AND LOWER(ZNAME) = LOWER(?)
+        """
 
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(database, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -57,9 +56,9 @@ enum Database {
         defer { if connection == nil { sqlite3_close(database) } }
 
         let sql = """
-            SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
-            WHERE ZBUNDLEIDENTIFIER IS NOT NULL ORDER BY LOWER(ZNAME)
-            """
+        SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
+        WHERE ZBUNDLEIDENTIFIER IS NOT NULL ORDER BY LOWER(ZNAME)
+        """
 
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(database, sql, -1, &stmt, nil) == SQLITE_OK else {

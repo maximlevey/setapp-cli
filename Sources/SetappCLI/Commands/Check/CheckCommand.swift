@@ -38,7 +38,8 @@ struct CheckCommand: ParsableCommand {
             for appURL in contents where appURL.pathExtension == "app" {
                 if let bundleID = SetappDetector.readBundleID(at: appURL),
                    let match = byBundleID[bundleID],
-                   !SetappDetector.isInstalled(match.name) {
+                   !SetappDetector.isInstalled(match.name)
+                {
                     found.append(match)
                 }
             }

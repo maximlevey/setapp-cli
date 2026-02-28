@@ -5,10 +5,10 @@ let package = Package(
     name: "SetappCLI",
     platforms: [.macOS(.v12)],
     products: [
-        .executable(name: "setapp-cli", targets: ["SetappCLI"])
+        .executable(name: "setapp-cli", targets: ["SetappCLI"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.5.0")
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.5.0"),
     ],
     targets: [
         .target(
@@ -16,14 +16,14 @@ let package = Package(
             path: "Sources/CBridge",
             publicHeadersPath: "include",
             linkerSettings: [
-                .linkedFramework("Foundation")
+                .linkedFramework("Foundation"),
             ]
         ),
         .executableTarget(
             name: "SetappCLI",
             dependencies: [
                 "CBridge",
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             path: "Sources/SetappCLI",
             linkerSettings: [
@@ -31,9 +31,9 @@ let package = Package(
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",
                     "-Xlinker", "__info_plist",
-                    "-Xlinker", "Info.plist"
-                ])
+                    "-Xlinker", "Info.plist",
+                ]),
             ]
-        )
+        ),
     ]
 )

@@ -1,12 +1,11 @@
-import Foundation
 import CBridge
+import Foundation
 
 /// XPC service helper for communicating with Setapp's AppsManagement service.
 ///
 /// Loads SetappInterface.framework via dlopen, creates an adaptor-based
 /// bidirectional XPC connection, and sends install/uninstall requests.
 enum XPCService {
-
     // MARK: - Constants
 
     private static let frameworkPath =
@@ -53,7 +52,7 @@ enum XPCService {
         let ptrSize = MemoryLayout<UnsafeRawPointer>.size
         var result: [String] = []
 
-        for index in 0..<Int(count) {
+        for index in 0 ..< Int(count) {
             let clsRaw = rawPtr.load(fromByteOffset: index * ptrSize, as: UnsafeRawPointer.self)
             let cName = class_getName(unsafeBitCast(clsRaw, to: AnyClass.self))
             if cName[0] == 0x41, cName[1] == 0x46, cName[2] == 0x58 { // "AFX"
@@ -74,7 +73,9 @@ enum XPCService {
     static func allAFXClasses() -> NSSet {
         let classes = allAFXClassList()
         let set = NSMutableSet(capacity: classes.count)
-        for cls in classes { set.add(cls) }
+        for cls in classes {
+            set.add(cls)
+        }
         return set.copy() as! NSSet
     }
 
@@ -111,11 +112,12 @@ enum XPCService {
         // Try AFXEnvironmentServiceID first
         if let envIDClass: AnyClass = NSClassFromString("AFXEnvironmentID"),
            let envID = (envIDClass as AnyObject)
-               .perform(NSSelectorFromString("defaultEnvironmentID"))?.takeUnretainedValue(),
-           let svcIDClass: AnyClass = NSClassFromString("AFXEnvironmentServiceID") {
-
+           .perform(NSSelectorFromString("defaultEnvironmentID"))?.takeUnretainedValue(),
+           let svcIDClass: AnyClass = NSClassFromString("AFXEnvironmentServiceID")
+        {
             guard let allocated = (svcIDClass as AnyObject)
-                .perform(NSSelectorFromString("alloc"))?.takeUnretainedValue() else {
+                .perform(NSSelectorFromString("alloc"))?.takeUnretainedValue()
+            else {
                 throw SetappError.xpcConnectionFailed(
                     message: "Failed to alloc AFXEnvironmentServiceID"
                 )
@@ -201,7 +203,8 @@ enum XPCService {
     private static func checkResponse(_ response: AnyObject) throws {
         let errorSel = NSSelectorFromString("error")
         if response.responds(to: errorSel),
-           let error = response.perform(errorSel)?.takeUnretainedValue() {
+           let error = response.perform(errorSel)?.takeUnretainedValue()
+        {
             let desc = (error as AnyObject)
                 .perform(NSSelectorFromString("localizedDescription"))?
                 .takeUnretainedValue() as? String ?? "\(error)"
@@ -221,8 +224,9 @@ enum XPCService {
 
         guard let allocated = (reqClass as AnyObject)
             .perform(NSSelectorFromString("alloc"))?.takeUnretainedValue(),
-              let request = allocated
-            .perform(NSSelectorFromString("init"))?.takeUnretainedValue() else {
+            let request = allocated
+            .perform(NSSelectorFromString("init"))?.takeUnretainedValue()
+        else {
             throw SetappError.xpcRequestFailed(
                 message: "Failed to instantiate AFXFetchAppByIDRequest"
             )
@@ -248,17 +252,20 @@ enum XPCService {
         let appSel = NSSelectorFromString("app")
 
         if responseObj.responds(to: valueSel),
-           let value = responseObj.perform(valueSel)?.takeUnretainedValue() {
+           let value = responseObj.perform(valueSel)?.takeUnretainedValue()
+        {
             let valueObj = value as AnyObject
             if valueObj.responds(to: appSel),
-               let appObj = valueObj.perform(appSel)?.takeUnretainedValue() {
+               let appObj = valueObj.perform(appSel)?.takeUnretainedValue()
+            {
                 return appObj as AnyObject
             }
             return valueObj
         }
 
         if responseObj.responds(to: appSel),
-           let appObj = responseObj.perform(appSel)?.takeUnretainedValue() {
+           let appObj = responseObj.perform(appSel)?.takeUnretainedValue()
+        {
             return appObj as AnyObject
         }
 
@@ -282,8 +289,9 @@ enum XPCService {
 
         guard let allocated = (reqClass as AnyObject)
             .perform(NSSelectorFromString("alloc"))?.takeUnretainedValue(),
-              let request = allocated
-            .perform(NSSelectorFromString("init"))?.takeUnretainedValue() else {
+            let request = allocated
+            .perform(NSSelectorFromString("init"))?.takeUnretainedValue()
+        else {
             throw SetappError.xpcRequestFailed(
                 message: "Failed to instantiate AFXInstallVendorAppRequest"
             )
@@ -320,8 +328,9 @@ enum XPCService {
 
         guard let allocated = (reqClass as AnyObject)
             .perform(NSSelectorFromString("alloc"))?.takeUnretainedValue(),
-              let request = allocated
-            .perform(NSSelectorFromString("init"))?.takeUnretainedValue() else {
+            let request = allocated
+            .perform(NSSelectorFromString("init"))?.takeUnretainedValue()
+        else {
             throw SetappError.xpcRequestFailed(
                 message: "Failed to instantiate AFXUninstallVendorAppRequest"
             )
@@ -346,13 +355,11 @@ enum XPCService {
 
         try checkResponse(response)
     }
-
 }
 
 // MARK: - Diagnostics
 
 extension XPCService {
-
     /// Run diagnostics and return results as JSON string.
     static func diag() throws -> String {
         var results: [[String: Any]] = []
@@ -446,7 +453,7 @@ extension XPCService {
         let methods = class_copyMethodList(cls, &methodCount)
         var names: [String] = []
         if let methods {
-            for index in 0..<Int(methodCount) {
+            for index in 0 ..< Int(methodCount) {
                 names.append(String(cString: sel_getName(method_getName(methods[index]))))
             }
             free(methods)
@@ -468,8 +475,9 @@ extension XPCService {
 
         guard let cls: AnyClass = NSClassFromString(appsClientClass),
               let reqRaw = (cls as AnyObject)
-                  .perform(NSSelectorFromString("requestClasses"))?.takeUnretainedValue(),
-              let reqClasses = reqRaw as? Set<AnyHashable> else {
+              .perform(NSSelectorFromString("requestClasses"))?.takeUnretainedValue(),
+              let reqClasses = reqRaw as? Set<AnyHashable>
+        else {
             result["ok"] = false
             result["error"] = "\(appsClientClass) class or requestClasses unavailable"
             return result

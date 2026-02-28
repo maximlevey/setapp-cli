@@ -1,7 +1,6 @@
 import Foundation
 
 enum SetappDetector {
-
     /// Check if an app is installed in any Setapp apps directory (case-insensitive).
     static func isInstalled(_ name: String, appsDirs: [URL] = URL.setappAppsDirectories) -> Bool {
         let target = name.lowercased()
@@ -30,7 +29,8 @@ enum SetappDetector {
         guard let data = try? Data(contentsOf: plistURL),
               let plist = try? PropertyListSerialization.propertyList(
                   from: data, format: nil
-              ) as? [String: Any] else {
+              ) as? [String: Any]
+        else {
             return nil
         }
         return plist["CFBundleIdentifier"] as? String

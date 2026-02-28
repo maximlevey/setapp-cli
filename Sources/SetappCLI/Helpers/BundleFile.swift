@@ -1,7 +1,6 @@
 import Foundation
 
 enum BundleFile {
-
     /// Resolve bundle file path from flag value, env var, or default.
     static func resolvePath(flagValue: String?) -> URL {
         if let flagValue, !flagValue.isEmpty {

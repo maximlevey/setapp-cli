@@ -24,10 +24,10 @@ struct BundleEditCommand: ParsableCommand {
                 withIntermediateDirectories: true
             )
             let header = """
-                # setapp bundle
-                # Run `setapp bundle install` to reinstall on a new Mac.
+            # setapp bundle
+            # Run `setapp bundle install` to reinstall on a new Mac.
 
-                """
+            """
             try header.write(to: path, atomically: true, encoding: .utf8)
         }
 

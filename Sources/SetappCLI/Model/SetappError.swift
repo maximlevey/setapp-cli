@@ -19,38 +19,40 @@ enum SetappError: LocalizedError, CustomStringConvertible {
 
     var description: String {
         switch self {
-        case .appNotFound(let name):
-            return "\(name): no matching app in Setapp catalogue"
-        case .appNotInstalled(let name):
-            return "\(name) is not installed via Setapp"
-        case .appAlreadyInstalled(let name):
-            return "\(name) is already installed"
-        case .databaseNotFound(let path):
-            return "Setapp database not found: \(path)\nIs Setapp installed?"
-        case .databaseQueryFailed(let message):
-            return "database query failed: \(message)"
-        case .bundleFileNotFound(let path):
-            return "no such file: \(path)"
+        case let .appNotFound(name):
+            "\(name): no matching app in Setapp catalogue"
+        case let .appNotInstalled(name):
+            "\(name) is not installed via Setapp"
+        case let .appAlreadyInstalled(name):
+            "\(name) is already installed"
+        case let .databaseNotFound(path):
+            "Setapp database not found: \(path)\nIs Setapp installed?"
+        case let .databaseQueryFailed(message):
+            "database query failed: \(message)"
+        case let .bundleFileNotFound(path):
+            "no such file: \(path)"
         case .bundleFileEmpty:
-            return "bundle file is empty"
-        case .xpcConnectionFailed(let message):
-            return "XPC connection failed: \(message)\nIs Setapp running?"
-        case .xpcRequestTimedOut(let seconds):
-            return "XPC request timed out after \(seconds)s"
-        case .xpcRequestFailed(let message):
-            return "XPC request failed: \(message)"
-        case .frameworkLoadFailed(let message):
-            return "cannot load SetappInterface: \(message)"
-        case .setappAppsDirectoryNotFound(let path):
-            return "Setapp apps directory not found: \(path)"
-        case .installFailed(let app, let message):
-            return "\(app): \(message)"
-        case .uninstallFailed(let app, let message):
-            return "\(app): \(message)"
-        case .generalError(let message):
-            return message
+            "bundle file is empty"
+        case let .xpcConnectionFailed(message):
+            "XPC connection failed: \(message)\nIs Setapp running?"
+        case let .xpcRequestTimedOut(seconds):
+            "XPC request timed out after \(seconds)s"
+        case let .xpcRequestFailed(message):
+            "XPC request failed: \(message)"
+        case let .frameworkLoadFailed(message):
+            "cannot load SetappInterface: \(message)"
+        case let .setappAppsDirectoryNotFound(path):
+            "Setapp apps directory not found: \(path)"
+        case let .installFailed(app, message):
+            "\(app): \(message)"
+        case let .uninstallFailed(app, message):
+            "\(app): \(message)"
+        case let .generalError(message):
+            message
         }
     }
 
-    var errorDescription: String? { description }
+    var errorDescription: String? {
+        description
+    }
 }
