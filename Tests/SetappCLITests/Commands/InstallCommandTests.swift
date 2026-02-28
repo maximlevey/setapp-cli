@@ -80,6 +80,8 @@ final class InstallCommandTests: CommandTestCase {
         XCTAssertThrowsError(try cmd.run()) { error in
             XCTAssertEqual(error as? SetappError, expected)
         }
+        XCTAssertTrue(mockInstaller.installedIDs.isEmpty,
+                      "Installer must not be called when verifyEnvironment throws")
     }
 
     func testInstallerError() throws {
