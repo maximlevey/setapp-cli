@@ -164,3 +164,93 @@ if "$CLI" bundle check --file /nonexistent/path/bundle 2>/dev/null; then
 else
     pass "bundle check missing file exits non-zero"
 fi
+
+# ============================================================
+# Tier 2: End-to-end XPC tests (opt-in)
+# ============================================================
+E2E=false
+for arg in "$@"; do
+    [[ "$arg" == "--e2e" ]] && E2E=true
+done
+
+if $E2E; then
+    printf "\n${BOLD}==> Tier 2: End-to-end XPC tests${RESET}\n"
+    printf "${YELLOW}This will install and remove real Setapp apps (Lungo, One Switch).${RESET}\n"
+    printf "Continue? [y/N] "
+    read -r confirm
+    if [[ "$confirm" != [yY] ]]; then
+        printf "Skipped E2E tests.\n"
+    else
+        # Cleanup function -- remove test apps regardless of outcome
+        cleanup_e2e() {
+            printf "\n${BOLD}==> E2E Cleanup${RESET}\n"
+            "$CLI" remove Lungo 2>/dev/null || true
+            "$CLI" remove "One Switch" 2>/dev/null || true
+            printf "  Cleaned up test apps.\n"
+        }
+        trap 'cleanup_e2e; rm -rf "$TMPDIR_TEST"' EXIT
+
+        # --- install Lungo ---
+        if "$CLI" install Lungo 2>&1 | grep -qi "installed\|already installed"; then
+            pass "install Lungo succeeds"
+        else
+            fail "install Lungo succeeds"
+        fi
+
+        # --- verify Lungo appears in list ---
+        if "$CLI" list 2>&1 | grep -q "Lungo"; then
+            pass "Lungo appears in list after install"
+        else
+            fail "Lungo appears in list after install"
+        fi
+
+        # --- verify Lungo on disk ---
+        if ls "$SETAPP_DIR"/Lungo.app >/dev/null 2>&1; then
+            pass "Lungo.app exists in $SETAPP_DIR"
+        else
+            fail "Lungo.app exists in $SETAPP_DIR"
+        fi
+
+        # --- remove Lungo ---
+        if "$CLI" remove Lungo 2>&1 | grep -qi "removed"; then
+            pass "remove Lungo succeeds"
+        else
+            fail "remove Lungo succeeds"
+        fi
+
+        # --- verify Lungo gone from disk ---
+        if ! ls "$SETAPP_DIR"/Lungo.app >/dev/null 2>&1; then
+            pass "Lungo.app removed from $SETAPP_DIR"
+        else
+            fail "Lungo.app removed from $SETAPP_DIR"
+        fi
+
+        # --- install One Switch for reinstall test ---
+        if "$CLI" install "One Switch" 2>&1 | grep -qi "installed\|already installed"; then
+            pass "install One Switch succeeds"
+        else
+            fail "install One Switch succeeds"
+        fi
+
+        # --- reinstall One Switch ---
+        if "$CLI" reinstall "One Switch" 2>&1 | grep -qi "installed"; then
+            pass "reinstall One Switch succeeds"
+        else
+            fail "reinstall One Switch succeeds"
+        fi
+
+        # --- verify One Switch still on disk after reinstall ---
+        if ls "$SETAPP_DIR"/One\ Switch.app >/dev/null 2>&1; then
+            pass "One Switch.app exists after reinstall"
+        else
+            fail "One Switch.app exists after reinstall"
+        fi
+
+        # --- remove One Switch (cleanup) ---
+        if "$CLI" remove "One Switch" 2>&1 | grep -qi "removed"; then
+            pass "remove One Switch succeeds"
+        else
+            fail "remove One Switch succeeds"
+        fi
+    fi
+fi
