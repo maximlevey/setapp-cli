@@ -3,35 +3,73 @@ import ArgumentParser
 import XCTest
 
 final class BundleCheckCommandTests: CommandTestCase {
-    // MARK: - Tests
 
-    func testAllInstalled() throws {
+    // MARK: - --path flag: all installed
+
+    func testAllInstalledWithCustomPath() throws {
         let tmp = TempDirectory()
-        let bundlePath = tmp.createFile(named: "bundle", content: "Proxyman\nBartender\n")
 
-        mockDetector.installedNames = ["Proxyman", "Bartender"]
+        let appsDir = tmp.url.appendingPathComponent("Apps")
+        try FileManager.default.createDirectory(
+            at: appsDir.appendingPathComponent("Proxyman.app"),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: appsDir.appendingPathComponent("Bartender.app"),
+            withIntermediateDirectories: true
+        )
 
-        var cmd = try BundleCheckCommand.parse(["--file", bundlePath.path])
+        let listPath = tmp.createFile(named: "AppList", content: "Proxyman\nBartender\n")
+        var cmd = try BundleCheckCommand.parse([
+            "--file", listPath.path,
+            "--path", appsDir.path
+        ])
 
         XCTAssertNoThrow(try cmd.run())
     }
 
-    func testMissingApps() throws {
+    // MARK: - --path flag: missing apps
+
+    func testMissingAppsWithCustomPath() throws {
         let tmp = TempDirectory()
-        let bundlePath = tmp.createFile(named: "bundle", content: "Proxyman\nBartender\n")
 
-        mockDetector.installedNames = ["Proxyman"]
+        let appsDir = tmp.url.appendingPathComponent("Apps")
+        try FileManager.default.createDirectory(
+            at: appsDir.appendingPathComponent("Proxyman.app"),
+            withIntermediateDirectories: true
+        )
 
-        var cmd = try BundleCheckCommand.parse(["--file", bundlePath.path])
+        let listPath = tmp.createFile(named: "AppList", content: "Proxyman\nBartender\n")
+        var cmd = try BundleCheckCommand.parse([
+            "--file", listPath.path,
+            "--path", appsDir.path
+        ])
 
         XCTAssertThrowsError(try cmd.run()) { error in
-            // BundleCheckCommand throws ExitCode(1) when apps are missing.
             guard let exitError = error as? ExitCode else {
                 return XCTFail("Expected ExitCode, got \(type(of: error))")
             }
             XCTAssertEqual(exitError.rawValue, 1)
         }
     }
+
+    // MARK: - Default paths (no --path)
+
+    func testDefaultPathsUsedWhenNoPathFlag() throws {
+        let tmp = TempDirectory()
+        let listPath = tmp.createFile(named: "AppList",
+                                      content: "ThisAppDefinitelyDoesNotExist999\n")
+        var cmd = try BundleCheckCommand.parse(["--file", listPath.path])
+
+        XCTAssertThrowsError(try cmd.run()) { error in
+            guard let exitError = error as? ExitCode else {
+                return XCTFail("Expected ExitCode, got \(type(of: error))")
+            }
+            XCTAssertEqual(exitError.rawValue, 1)
+        }
+    }
+
+    // MARK: - AppList file not found
 
     func testAppListFileNotFound() throws {
         var cmd = try BundleCheckCommand.parse(["--file", "/nonexistent/path/AppList"])
