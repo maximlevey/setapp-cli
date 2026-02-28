@@ -254,3 +254,18 @@ if $E2E; then
         fi
     fi
 fi
+
+# ============================================================
+# Summary
+# ============================================================
+printf "\n${BOLD}==> Results${RESET}\n"
+printf "  ${GREEN}%d passed${RESET}" "$PASS"
+if [[ $FAIL -gt 0 ]]; then
+    printf ", ${RED}%d failed${RESET}" "$FAIL"
+fi
+if [[ $SKIP -gt 0 ]]; then
+    printf ", ${YELLOW}%d skipped${RESET}" "$SKIP"
+fi
+printf "\n\n"
+
+[[ $FAIL -eq 0 ]]
