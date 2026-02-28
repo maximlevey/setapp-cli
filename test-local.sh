@@ -110,3 +110,57 @@ if grep -qi "proxyman\|cleanmymac\|cleanshot" "$BUNDLE_TMP" 2>/dev/null; then
 else
     fail "dump --file contains app names"
 fi
+
+# --- bundle check ---
+if "$CLI" bundle check --file "$BUNDLE_TMP" >/dev/null 2>&1; then
+    pass "bundle check passes on freshly-dumped bundle"
+else
+    fail "bundle check passes on freshly-dumped bundle"
+fi
+
+# --- bundle edit (creates file) ---
+EDIT_TMP="$TMPDIR_TEST/edit-test/bundle"
+EDITOR=true "$CLI" bundle edit --file "$EDIT_TMP" 2>/dev/null
+if grep -q "# setapp bundle" "$EDIT_TMP" 2>/dev/null; then
+    pass "bundle edit creates file with header"
+else
+    fail "bundle edit creates file with header"
+fi
+
+# --- verbose flag ---
+VERBOSE_OUT=$("$CLI" list -v 2>&1) || true
+if [ ${#VERBOSE_OUT} -gt 0 ]; then
+    pass "list -v produces output"
+else
+    fail "list -v produces output"
+fi
+
+# --- debug flag ---
+DEBUG_OUT=$("$CLI" list -d 2>/dev/null) || true
+DEBUG_ERR=$("$CLI" list -d 2>&1 1>/dev/null) || true
+if echo "$DEBUG_ERR" | grep -q "\[debug\]"; then
+    pass "list -d writes debug to stderr"
+else
+    fail "list -d writes debug to stderr"
+fi
+
+# --- error: install nonexistent ---
+if "$CLI" install NonExistentApp123 2>/dev/null; then
+    fail "install nonexistent app exits non-zero"
+else
+    pass "install nonexistent app exits non-zero"
+fi
+
+# --- error: remove nonexistent ---
+if "$CLI" remove NonExistentApp123 2>/dev/null; then
+    fail "remove nonexistent app exits non-zero"
+else
+    pass "remove nonexistent app exits non-zero"
+fi
+
+# --- error: bundle check missing file ---
+if "$CLI" bundle check --file /nonexistent/path/bundle 2>/dev/null; then
+    fail "bundle check missing file exits non-zero"
+else
+    pass "bundle check missing file exits non-zero"
+fi
