@@ -12,7 +12,7 @@ final class BundleDumpCommandTests: CommandTestCase {
         XCTAssertNoThrow(try cmd.run())
     }
 
-    func testWritesBundleFileWhenAppsInstalled() throws {
+    func testWritesAppListFileWhenAppsInstalled() throws {
         try XCTSkipUnless(setappDirectoryExists, "Setapp directory not present on this machine")
 
         let tmp = TempDirectory()

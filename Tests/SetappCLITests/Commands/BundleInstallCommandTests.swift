@@ -72,7 +72,7 @@ final class BundleInstallCommandTests: CommandTestCase {
         XCTAssertEqual(mockInstaller.installedIDs, [1], "Should install Proxyman but skip unknown app")
     }
 
-    func testEmptyBundleFile() throws {
+    func testEmptyAppListFile() throws {
         let tmp = TempDirectory()
         let bundlePath = tmp.createFile(named: "bundle", content: "# just a comment\n\n")
 
