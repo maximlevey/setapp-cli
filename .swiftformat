@@ -1,0 +1,8 @@
+--swiftversion 5.9
+--indent 4
+--maxwidth 120
+--wraparguments before-first
+--wrapcollections before-first
+--closingparen balanced
+--stripunusedargs closure-only
+--ifdef no-indent

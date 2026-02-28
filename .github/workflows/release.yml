@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Release
+    runs-on: macos-15
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build
+        run: |
+          swift build \
+            --configuration release \
+            --arch arm64 \
+            --arch x86_64
+
+          BIN_PATH="$(swift build --configuration release --arch arm64 --arch x86_64 --show-bin-path)/setapp-cli"
+          cp "$BIN_PATH" setapp-cli
+          codesign --force --sign - setapp-cli
+          chmod +x setapp-cli
+      - name: Verify
+        run: |
+          file setapp-cli
+          ./setapp-cli --version
+      - name: Package
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          tar -czf "setapp-cli-${VERSION}-macos-universal.tar.gz" setapp-cli
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: setapp-cli-*-macos-universal.tar.gz

@@ -1,0 +1,27 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+*.xcuserstate
+DerivedData/
+xcuserdata/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Code signing
+_CodeSignature/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+

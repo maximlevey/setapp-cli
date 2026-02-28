@@ -1,0 +1,33 @@
+name: Lint
+
+on:
+  push:
+    paths: ["**.swift"]
+    branches: [main]
+  pull_request:
+    paths: ["**.swift"]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: 5.10.1
+      - uses: m-takuma/setup-swiftlint@1.0.0
+        with:
+          swiftlint-version: 0.61.0
+      - name: Print SwiftLint version
+        run: swiftlint --version
+      - name: Run SwiftLint
+        run: swiftlint --strict
+      - name: Install SwiftFormat
+        run: brew install swiftformat
+      - name: Print SwiftFormat version
+        run: swiftformat --version
+      - name: Run SwiftFormat
+        run: swiftformat --lint .
