@@ -29,7 +29,6 @@ enum BundleFile {
 
     /// Verify Setapp directories exist and return installed app names, or throw/warn.
     ///
-    /// Shared by DumpCommand and BundleDumpCommand.
     /// - Returns: Installed app names, or an empty array if none are installed (after printing a warning).
     static func fetchInstalledNames() throws -> [String] {
         let appsDirs: [URL] = URL.setappAppsDirectories
