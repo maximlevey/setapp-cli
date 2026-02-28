@@ -17,7 +17,7 @@ struct BundleCheckCommand: ParsableCommand {
 
         let path: URL = BundleFile.resolvePath(flagValue: file)
         let names: [String] = try BundleFile.parse(at: path)
-        let missing: [String] = names.filter { !SetappDetector.isInstalled($0) }
+        let missing: [String] = names.filter { !Dependencies.detector.isInstalled($0) }
 
         if missing.isEmpty {
             Printer.log("All bundle apps are installed.")

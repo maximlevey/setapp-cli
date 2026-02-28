@@ -12,8 +12,8 @@ struct ListCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        let apps: [SetappApp] = try Database.getAvailableApps()
-        for app in apps where SetappDetector.isInstalled(app.name) {
+        let apps: [SetappApp] = try Dependencies.lookup.getAvailableApps()
+        for app in apps where Dependencies.detector.isInstalled(app.name) {
             Printer.log(app.name)
         }
     }

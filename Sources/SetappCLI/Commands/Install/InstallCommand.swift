@@ -18,23 +18,23 @@ struct InstallCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        if SetappDetector.isInstalled(app) {
+        if Dependencies.detector.isInstalled(app) {
             Printer.warning("\(app) is already installed")
             return
         }
 
-        guard let appInfo = try Database.getAppByName(app) else {
+        guard let appInfo = try Dependencies.lookup.getAppByName(app) else {
             throw SetappError.appNotFound(name: app)
         }
 
         Printer.info("Installing \(appInfo.name)")
 
-        let replacePath: URL? = replace ? SetappDetector.findNonSetappApp(named: appInfo.name) : nil
+        let replacePath: URL? = replace ? Dependencies.detector.findNonSetappApp(named: appInfo.name) : nil
         if let path = replacePath {
             Printer.verbose("Will replace \(path.path) after install")
         }
 
-        try XPCService.install(appID: appInfo.identifier)
+        try Dependencies.installer.install(appID: appInfo.identifier)
         Printer.log("\(appInfo.name) installed")
 
         if let path = replacePath, FileManager.default.fileExists(atPath: path.path) {

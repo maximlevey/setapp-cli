@@ -18,14 +18,8 @@ struct DumpCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        let appsDirs: [URL] = URL.setappAppsDirectories
-        guard appsDirs.contains(where: { FileManager.default.directoryExists(at: $0.path) }) else {
-            throw SetappError.setappAppsDirectoryNotFound(path: appsDirs.map(\.path).joined(separator: ", "))
-        }
-
-        let installed: [String] = SetappDetector.installedAppNames()
+        let installed: [String] = try BundleFile.fetchInstalledNames()
         if installed.isEmpty {
-            Printer.warning("No Setapp apps installed")
             return
         }
 

@@ -1,5 +1,7 @@
 import ArgumentParser
+import Foundation
 
+@main
 struct SetappCLI: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "setapp-cli",

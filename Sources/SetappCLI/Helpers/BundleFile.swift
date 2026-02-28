@@ -27,6 +27,25 @@ enum BundleFile {
             .filter { !$0.isEmpty }
     }
 
+    /// Verify Setapp directories exist and return installed app names, or throw/warn.
+    ///
+    /// Shared by DumpCommand and BundleDumpCommand.
+    /// - Returns: Installed app names, or an empty array if none are installed (after printing a warning).
+    static func fetchInstalledNames() throws -> [String] {
+        let appsDirs: [URL] = URL.setappAppsDirectories
+        guard appsDirs.contains(where: { FileManager.default.directoryExists(at: $0.path) }) else {
+            throw SetappError.setappAppsDirectoryNotFound(
+                path: appsDirs.map(\.path).joined(separator: ", ")
+            )
+        }
+
+        let installed: [String] = Dependencies.detector.installedAppNames()
+        if installed.isEmpty {
+            Printer.warning("No Setapp apps installed")
+        }
+        return installed
+    }
+
     /// Write sorted app names to a bundle file with a header comment.
     static func write(names: [String], to path: URL) throws {
         try FileManager.default.createDirectory(

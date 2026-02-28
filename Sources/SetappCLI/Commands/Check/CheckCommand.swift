@@ -22,7 +22,7 @@ struct CheckCommand: ParsableCommand {
             URL.homeDirectory.appendingPathComponent("Applications")
         ]
 
-        let available: [SetappApp] = try Database.getAvailableApps()
+        let available: [SetappApp] = try Dependencies.lookup.getAvailableApps()
         let byBundleID: [String: SetappApp] = Dictionary(
             available.map { ($0.bundleIdentifier.replacingOccurrences(of: "-setapp", with: ""), $0) }
         ) { first, _ in first }
@@ -37,9 +37,9 @@ struct CheckCommand: ParsableCommand {
 
             for appURL in contents where appURL.pathExtension == "app" {
                 if
-                    let bundleID = SetappDetector.readBundleID(at: appURL),
+                    let bundleID = Dependencies.detector.readBundleID(at: appURL),
                     let match = byBundleID[bundleID],
-                    !SetappDetector.isInstalled(match.name) {
+                    !Dependencies.detector.isInstalled(match.name) {
                     found.append(match)
                 }
             }
@@ -58,7 +58,7 @@ struct CheckCommand: ParsableCommand {
         if install {
             Printer.info("Installing \(found.count) app(s)")
             for app in found {
-                try XPCService.install(appID: app.identifier)
+                try Dependencies.installer.install(appID: app.identifier)
                 Printer.log("\(app.name) installed")
             }
         }

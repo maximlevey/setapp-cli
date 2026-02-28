@@ -1,5 +1,6 @@
 excluded:
   - .build
+  - Tests
 
 closure_body_length:
   warning: 20

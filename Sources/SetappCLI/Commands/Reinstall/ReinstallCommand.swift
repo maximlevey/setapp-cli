@@ -15,18 +15,18 @@ struct ReinstallCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        guard let appInfo = try Database.getAppByName(app) else {
+        guard let appInfo = try Dependencies.lookup.getAppByName(app) else {
             throw SetappError.appNotFound(name: app)
         }
 
         Printer.info("Reinstalling \(appInfo.name)")
 
-        if SetappDetector.isInstalled(appInfo.name) {
-            try XPCService.uninstall(appID: appInfo.identifier)
+        if Dependencies.detector.isInstalled(appInfo.name) {
+            try Dependencies.installer.uninstall(appID: appInfo.identifier)
             Printer.verbose("\(appInfo.name) removed")
         }
 
-        try XPCService.install(appID: appInfo.identifier)
+        try Dependencies.installer.install(appID: appInfo.identifier)
         Printer.log("\(appInfo.name) reinstalled")
     }
 }

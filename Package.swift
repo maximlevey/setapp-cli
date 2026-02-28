@@ -35,6 +35,11 @@ let package: Package = .init(
                     "-Xlinker", "Info.plist"
                 ])
             ]
+        ),
+        .testTarget(
+            name: "SetappCLITests",
+            dependencies: ["SetappCLI"],
+            path: "Tests/SetappCLITests"
         )
     ]
 )

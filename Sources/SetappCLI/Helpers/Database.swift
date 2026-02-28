@@ -4,8 +4,9 @@ import SQLite3
 /// Setapp SQLite database access layer.
 enum Database {
     /// Open the Setapp SQLite database (read-only).
-    static func connect() throws -> OpaquePointer {
-        let path: String = URL.setappDatabase.path
+    /// - Parameter databasePath: Path to the SQLite file. Defaults to the standard Setapp database location.
+    static func connect(databasePath: String = URL.setappDatabase.path) throws -> OpaquePointer {
+        let path: String = databasePath
 
         guard FileManager.default.fileExists(atPath: path) else {
             throw SetappError.databaseNotFound(path: path)

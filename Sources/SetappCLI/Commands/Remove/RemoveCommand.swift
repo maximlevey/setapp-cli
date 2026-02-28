@@ -15,16 +15,16 @@ struct RemoveCommand: ParsableCommand {
     mutating func run() throws {
         globals.apply()
 
-        guard let appInfo = try Database.getAppByName(app) else {
+        guard let appInfo = try Dependencies.lookup.getAppByName(app) else {
             throw SetappError.appNotFound(name: app)
         }
 
-        guard SetappDetector.isInstalled(appInfo.name) else {
+        guard Dependencies.detector.isInstalled(appInfo.name) else {
             throw SetappError.appNotInstalled(name: appInfo.name)
         }
 
         Printer.info("Removing \(appInfo.name)")
-        try XPCService.uninstall(appID: appInfo.identifier)
+        try Dependencies.installer.uninstall(appID: appInfo.identifier)
         Printer.log("\(appInfo.name) removed")
     }
 }

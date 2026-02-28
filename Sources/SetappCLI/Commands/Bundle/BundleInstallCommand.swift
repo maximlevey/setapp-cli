@@ -29,20 +29,20 @@ struct BundleInstallCommand: ParsableCommand {
         Printer.info("Installing \(names.count) app(s) from \(path.path)")
 
         for name in names {
-            if SetappDetector.isInstalled(name) {
+            if Dependencies.detector.isInstalled(name) {
                 Printer.verbose("\(name) is already installed, skipping")
                 continue
             }
 
-            guard let appInfo = try Database.getAppByName(name) else {
+            guard let appInfo = try Dependencies.lookup.getAppByName(name) else {
                 Printer.error("App not found in Setapp catalogue: \(name)")
                 continue
             }
 
-            let replacePath: URL? = replace ? SetappDetector.findNonSetappApp(named: appInfo.name) : nil
+            let replacePath: URL? = replace ? Dependencies.detector.findNonSetappApp(named: appInfo.name) : nil
 
             do {
-                try XPCService.install(appID: appInfo.identifier)
+                try Dependencies.installer.install(appID: appInfo.identifier)
                 Printer.log("\(appInfo.name) installed")
 
                 if let path = replacePath, FileManager.default.fileExists(atPath: path.path) {

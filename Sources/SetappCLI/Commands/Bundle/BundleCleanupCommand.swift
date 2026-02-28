@@ -19,7 +19,7 @@ struct BundleCleanupCommand: ParsableCommand {
         let names: [String] = try BundleFile.parse(at: path)
         let bundleSet: Set<String> = Set(names.map { $0.lowercased() })
 
-        let installed: [String] = SetappDetector.installedAppNames()
+        let installed: [String] = Dependencies.detector.installedAppNames()
         let extras: [String] = installed.filter { !bundleSet.contains($0.lowercased()) }
 
         if extras.isEmpty {
@@ -30,13 +30,13 @@ struct BundleCleanupCommand: ParsableCommand {
         Printer.info("Removing \(extras.count) app(s) not in bundle")
 
         for name in extras {
-            guard let appInfo = try Database.getAppByName(name) else {
+            guard let appInfo = try Dependencies.lookup.getAppByName(name) else {
                 Printer.error("App not found in Setapp catalogue: \(name)")
                 continue
             }
 
             do {
-                try XPCService.uninstall(appID: appInfo.identifier)
+                try Dependencies.installer.uninstall(appID: appInfo.identifier)
                 Printer.log("\(appInfo.name) removed")
             } catch {
                 Printer.error("Failed to remove \(appInfo.name): \(error.localizedDescription)")
