@@ -70,6 +70,18 @@ final class InstallCommandTests: CommandTestCase {
         XCTAssertEqual(mockInstaller.installedIDs, [42])
     }
 
+    func testVerifyEnvironmentCalledOnInstall() throws {
+        let expected = SetappError.generalError(message: "not installed")
+        Dependencies.verifyEnvironment = { throw expected }
+
+        mockLookup.apps = [SetappApp(name: "Proxyman", bundleIdentifier: "com.proxyman", identifier: 1)]
+        var cmd = try InstallCommand.parse(["Proxyman"])
+
+        XCTAssertThrowsError(try cmd.run()) { error in
+            XCTAssertEqual(error as? SetappError, expected)
+        }
+    }
+
     func testInstallerError() throws {
         mockLookup.apps = [
             SetappApp(name: "Proxyman", bundleIdentifier: "com.proxyman", identifier: 42)

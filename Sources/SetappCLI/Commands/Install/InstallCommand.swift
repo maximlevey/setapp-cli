@@ -17,6 +17,7 @@ struct InstallCommand: ParsableCommand {
 
     mutating func run() throws {
         globals.apply()
+        try Dependencies.verifyEnvironment()
 
         if Dependencies.detector.isInstalled(app) {
             Printer.warning("\(app) is already installed")

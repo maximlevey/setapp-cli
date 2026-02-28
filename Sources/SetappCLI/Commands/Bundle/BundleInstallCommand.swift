@@ -17,6 +17,7 @@ struct BundleInstallCommand: ParsableCommand {
 
     mutating func run() throws {
         globals.apply()
+        try Dependencies.verifyEnvironment()
 
         let path: URL = BundleFile.resolvePath(flagValue: file)
         let names: [String] = try BundleFile.parse(at: path)

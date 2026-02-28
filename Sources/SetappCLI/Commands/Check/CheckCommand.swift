@@ -14,6 +14,7 @@ struct CheckCommand: ParsableCommand {
 
     mutating func run() throws {
         globals.apply()
+        try Dependencies.verifyEnvironment()
 
         Printer.info("Checking for apps available via Setapp")
 

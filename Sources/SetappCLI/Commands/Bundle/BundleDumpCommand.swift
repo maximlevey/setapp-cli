@@ -14,6 +14,7 @@ struct BundleDumpCommand: ParsableCommand {
 
     mutating func run() throws {
         globals.apply()
+        try Dependencies.verifyEnvironment()
 
         let installed: [String] = try BundleFile.fetchInstalledNames()
         if installed.isEmpty {

@@ -11,6 +11,7 @@ struct ListCommand: ParsableCommand {
 
     mutating func run() throws {
         globals.apply()
+        try Dependencies.verifyEnvironment()
 
         Printer.debug("Querying available apps from database")
         let apps: [SetappApp] = try Dependencies.lookup.getAvailableApps()

@@ -14,6 +14,7 @@ struct RemoveCommand: ParsableCommand {
 
     mutating func run() throws {
         globals.apply()
+        try Dependencies.verifyEnvironment()
 
         guard let appInfo = try Dependencies.lookup.getAppByName(app) else {
             throw SetappError.appNotFound(name: app)
