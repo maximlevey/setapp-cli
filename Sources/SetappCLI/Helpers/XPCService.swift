@@ -36,8 +36,11 @@ enum XPCService {
 
     /// Load SetappInterface.framework via dlopen.
     ///
-    /// The binary must be compiled with `-rpath` pointing at Setapp's Frameworks
-    /// directory so that @rpath dependencies (AgentHealthMetrics, etc.) resolve.
+    /// SetappInterface embeds no `LC_RPATH` entries of its own, so the host
+    /// binary must carry an `LC_RPATH` entry pointing at
+    /// `Setapp.app/Contents/Frameworks/`.  That rpath is injected at build time
+    /// via Package.swift (for `swift build`) and via the `-Xlinker -rpath` flag
+    /// in the Makefile `build` target (for `make build`).
     static func loadFramework() throws {
         let path: String = NSString(string: frameworkPath).expandingTildeInPath
         Printer.debug("Loading framework from: \(path)")

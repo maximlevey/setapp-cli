@@ -1,5 +1,12 @@
 // swift-tools-version: 5.9
+import Foundation
 import PackageDescription
+
+/// Path to Setapp's bundled frameworks directory, used as an rpath so that
+/// SetappInterface's @rpath dependencies (AgentHealthMetrics, etc.) resolve.
+let setappFrameworks: String =
+    "\(NSHomeDirectory())/Library/Application Support/Setapp/LaunchAgents/" +
+    "Setapp.app/Contents/Frameworks"
 
 /// Setapp CLI package definition.
 let package: Package = .init(
@@ -32,7 +39,9 @@ let package: Package = .init(
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",
                     "-Xlinker", "__info_plist",
-                    "-Xlinker", "Info.plist"
+                    "-Xlinker", "Info.plist",
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", setappFrameworks
                 ])
             ]
         ),
