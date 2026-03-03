@@ -41,6 +41,9 @@ enum Database {
         }
         defer { sqlite3_finalize(stmt) }
 
+        // NSString local required: sqlite3_bind_text with SQLITE_STATIC (nil destructor) requires
+        // the pointer to remain valid until sqlite3_step completes. A named binding prevents ARC
+        // from releasing the NSString before the C call returns.
         let nameNS: NSString = name as NSString
         sqlite3_bind_text(stmt, 1, nameNS.utf8String, -1, nil)
 
@@ -139,6 +142,7 @@ enum Database {
         }
         defer { sqlite3_finalize(stmt) }
 
+        // NSString local required: see getAppByName comment above.
         let patternNS: NSString = pattern as NSString
         let patternPtr: UnsafePointer<CChar>? = patternNS.utf8String
         sqlite3_bind_text(stmt, 1, patternPtr, -1, nil)

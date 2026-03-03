@@ -9,7 +9,7 @@ struct SetappApp: Equatable, Comparable {
     /// Setapp numeric app identifier.
     let identifier: Int
     /// Short one-line description from the catalogue.  `nil` when not queried.
-    var tagline: String?
+    let tagline: String?
 
     /// Create a SetappApp.
     /// - Parameters:
