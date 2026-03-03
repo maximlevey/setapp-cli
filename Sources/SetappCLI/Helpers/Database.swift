@@ -41,7 +41,8 @@ enum Database {
         }
         defer { sqlite3_finalize(stmt) }
 
-        sqlite3_bind_text(stmt, 1, (name as NSString).utf8String, -1, nil)
+        let nameNS: NSString = name as NSString
+        sqlite3_bind_text(stmt, 1, nameNS.utf8String, -1, nil)
 
         guard sqlite3_step(stmt) == SQLITE_ROW else {
             return nil
@@ -144,7 +145,8 @@ enum Database {
         sqlite3_bind_text(stmt, 2, patternPtr, -1, nil)
         sqlite3_bind_text(stmt, 3, patternPtr, -1, nil)
         if let category: String = category {
-            sqlite3_bind_text(stmt, 4, (category as NSString).utf8String, -1, nil)
+            let categoryNS: NSString = category as NSString
+            sqlite3_bind_text(stmt, 4, categoryNS.utf8String, -1, nil)
         }
 
         var apps: [SetappApp] = []
