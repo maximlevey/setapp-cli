@@ -45,6 +45,7 @@ final class SetappErrorTests: XCTestCase {
         let error = SetappError.xpcConnectionFailed(message: "no service")
         XCTAssertTrue(error.description.contains("no service"))
         XCTAssertTrue(error.description.contains("Setapp running"))
+        XCTAssertTrue(error.description.contains("setapp-cli diag"))
     }
 
     func testXPCRequestTimedOut() {
@@ -61,6 +62,7 @@ final class SetappErrorTests: XCTestCase {
     func testFrameworkLoadFailed() {
         let error = SetappError.frameworkLoadFailed(message: "dlopen error")
         XCTAssertTrue(error.description.contains("dlopen error"))
+        XCTAssertTrue(error.description.contains("setapp-cli diag"))
     }
 
     func testSetappAppsDirectoryNotFound() {
