@@ -138,7 +138,8 @@ enum Database {
         }
         defer { sqlite3_finalize(stmt) }
 
-        let patternPtr: UnsafePointer<CChar>? = (pattern as NSString).utf8String
+        let patternNS: NSString = pattern as NSString
+        let patternPtr: UnsafePointer<CChar>? = patternNS.utf8String
         sqlite3_bind_text(stmt, 1, patternPtr, -1, nil)
         sqlite3_bind_text(stmt, 2, patternPtr, -1, nil)
         sqlite3_bind_text(stmt, 3, patternPtr, -1, nil)
