@@ -39,7 +39,7 @@ struct SearchCommand: ParsableCommand {
     var query: String
 
     /// Restrict results to a single category.
-    @Option(name: .long, help: "Filter by category: develop, optimize, work, create, ai.")
+    @Option(name: .long, help: "Filter by category: \(AppCategory.allCases.map(\.rawValue).joined(separator: ", ")).")
     var category: AppCategory?
 
     /// Hide apps that are already installed.
@@ -55,8 +55,12 @@ struct SearchCommand: ParsableCommand {
             category: category?.dbName
         )
 
+        let installedNames: Set<String> = Set(
+            results.compactMap { Dependencies.detector.isInstalled($0.name) ? $0.name : nil }
+        )
+
         let filtered: [SetappApp] = notInstalled
-            ? results.filter { !Dependencies.detector.isInstalled($0.name) }
+            ? results.filter { !installedNames.contains($0.name) }
             : results
 
         if filtered.isEmpty {
@@ -69,7 +73,7 @@ struct SearchCommand: ParsableCommand {
         let statusWidth: Int = statusLabel.count
 
         for app in filtered {
-            let installed: Bool = Dependencies.detector.isInstalled(app.name)
+            let installed: Bool = installedNames.contains(app.name)
             let namePad: String = app.name.padding(
                 toLength: nameWidth + 2,
                 withPad: " ",
