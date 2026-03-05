@@ -34,13 +34,13 @@ enum SetappError: LocalizedError, CustomStringConvertible, Equatable {
         case .appListFileEmpty:
             "AppList file is empty"
         case let .xpcConnectionFailed(message):
-            "XPC connection failed: \(message)\nIs Setapp running?"
+            "XPC connection failed: \(message)\nIs Setapp running? Run `setapp-cli diag` for details."
         case let .xpcRequestTimedOut(seconds):
             "XPC request timed out after \(seconds)s"
         case let .xpcRequestFailed(message):
             "XPC request failed: \(message)"
         case let .frameworkLoadFailed(message):
-            "cannot load SetappInterface: \(message)"
+            "cannot load SetappInterface: \(message)\nRun `setapp-cli diag` for details."
         case let .setappAppsDirectoryNotFound(path):
             "Setapp apps directory not found: \(path)"
         case let .installFailed(app, message):

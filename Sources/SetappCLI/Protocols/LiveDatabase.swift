@@ -11,4 +11,9 @@ struct LiveDatabase: AppLookup {
     func getAvailableApps() throws -> [SetappApp] {
         try Database.getAvailableApps()
     }
+
+    /// Search apps by query and optional category.
+    func searchApps(query: String, category: String?) throws -> [SetappApp] {
+        try Database.searchApps(query: query, category: category)
+    }
 }
