@@ -1,11 +1,12 @@
+# this_file: .github/workflows/build.yml
 name: Build
 
 on:
   push:
-    paths: ["**.swift", "Package.swift", "Package.resolved"]
+    paths: ["**.swift", "Package.swift", "Package.resolved", "test-framework-loading.sh", ".github/workflows/build.yml"]
     branches: [main]
   pull_request:
-    paths: ["**.swift", "Package.swift", "Package.resolved"]
+    paths: ["**.swift", "Package.swift", "Package.resolved", "test-framework-loading.sh", ".github/workflows/build.yml"]
     branches: [main]
   workflow_dispatch:
   
@@ -19,7 +20,15 @@ jobs:
         run: swift build
       - name: Test
         run: swift test
+      - name: Test portable framework loading
+        run: bash ./test-framework-loading.sh
       - name: Verify
         run: |
           file .build/debug/setapp-cli
           .build/debug/setapp-cli --version
+      - name: Build and verify universal release
+        run: |
+          swift build --configuration release --arch arm64 --arch x86_64
+          BIN_PATH="$(swift build --configuration release --arch arm64 --arch x86_64 --show-bin-path)/setapp-cli"
+          lipo -verify_arch arm64 x86_64 "$BIN_PATH"
+          "$BIN_PATH" --version

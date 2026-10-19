@@ -1,3 +1,7 @@
+---
+this_file: README.md
+---
+
 # setapp-cli
 
 ![macOS](https://img.shields.io/badge/macOS-12%2B-blue)
@@ -34,6 +38,17 @@ SUBCOMMANDS:
 ## Documentation
 
 See the [wiki](https://github.com/maximlevey/setapp-cli/wiki) for full documentation.
+
+## Building and testing
+
+Run `make build` for a universal release, or `swift build` for a debug build.
+The CLI discovers the current user's Setapp framework directory at startup;
+downloaded binaries do not need a framework path embedded by the builder.
+
+Run `swift test` for unit tests and `bash ./test-framework-loading.sh` for a
+framework-loading regression test that does not require Setapp or an account.
+The regression test covers transitive frameworks, sibling dylibs, paths with
+spaces, and preserving arguments across the startup relaunch.
 
 ## License
 

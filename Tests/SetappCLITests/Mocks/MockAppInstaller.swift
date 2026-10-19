@@ -1,3 +1,4 @@
+// this_file: Tests/SetappCLITests/Mocks/MockAppInstaller.swift
 import Foundation
 @testable import SetappCLI
 
@@ -8,12 +9,16 @@ final class MockAppInstaller: AppInstaller {
     var uninstallError: Error?
 
     func install(appID: Int) throws {
-        if let installError { throw installError }
+        if let installError {
+            throw installError
+        }
         installedIDs.append(appID)
     }
 
     func uninstall(appID: Int) throws {
-        if let uninstallError { throw uninstallError }
+        if let uninstallError {
+            throw uninstallError
+        }
         uninstalledIDs.append(appID)
     }
 }

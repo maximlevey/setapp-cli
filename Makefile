@@ -1,5 +1,5 @@
+# this_file: Makefile
 BINARY := setapp-cli
-FRAMEWORKS_DIR := $(HOME)/Library/Application Support/Setapp/LaunchAgents/Setapp.app/Contents/Frameworks
 BUILD_DIR := $(shell swift build --configuration release --arch arm64 --arch x86_64 --show-bin-path 2>/dev/null)
 BIN_DIR ?= $(HOME)/.local/bin
 
@@ -8,8 +8,7 @@ BIN_DIR ?= $(HOME)/.local/bin
 .PHONY: build install uninstall clean help lint test
 
 build:			## Build the release binary (universal)
-	swift build --configuration release --arch arm64 --arch x86_64 \
-		-Xlinker -rpath -Xlinker "$(FRAMEWORKS_DIR)"
+	swift build --configuration release --arch arm64 --arch x86_64
 
 install: build		## Build and install to ~/.local/bin (override with BIN_DIR=)
 	mkdir -p "$(BIN_DIR)"

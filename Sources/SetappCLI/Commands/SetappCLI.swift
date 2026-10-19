@@ -1,3 +1,4 @@
+// this_file: Sources/SetappCLI/Commands/SetappCLI.swift
 import ArgumentParser
 import Foundation
 
@@ -24,4 +25,15 @@ struct SetappCLI: ParsableCommand {
             BundleCommand.self
         ]
     )
+
+    /// Parse first so help and argument errors work without loading Setapp frameworks.
+    static func main() {
+        do {
+            var command: ParsableCommand = try parseAsRoot()
+            try FrameworkEnvironment.prepare(frameworkPath: XPCService.frameworkPath)
+            try command.run()
+        } catch {
+            exit(withError: error)
+        }
+    }
 }

@@ -1,3 +1,4 @@
+// this_file: Sources/SetappCLI/Helpers/Database.swift
 import Foundation
 import SQLite3
 
@@ -26,7 +27,11 @@ enum Database {
     /// Find an app by name (case-insensitive).
     static func getAppByName(_ name: String, connection: OpaquePointer? = nil) throws -> SetappApp? {
         let database: OpaquePointer = try connection ?? connect()
-        defer { if connection == nil { sqlite3_close(database) } }
+        defer {
+            if connection == nil {
+                sqlite3_close(database)
+            }
+        }
 
         let sql: String = """
         SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP
@@ -57,7 +62,11 @@ enum Database {
     /// Return all available apps sorted by name.
     static func getAvailableApps(connection: OpaquePointer? = nil) throws -> [SetappApp] {
         let database: OpaquePointer = try connection ?? connect()
-        defer { if connection == nil { sqlite3_close(database) } }
+        defer {
+            if connection == nil {
+                sqlite3_close(database)
+            }
+        }
 
         let sql: String = """
         SELECT ZNAME, ZBUNDLEIDENTIFIER, ZIDENTIFIER FROM ZAPP

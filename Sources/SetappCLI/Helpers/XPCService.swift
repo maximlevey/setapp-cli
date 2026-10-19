@@ -1,3 +1,4 @@
+// this_file: Sources/SetappCLI/Helpers/XPCService.swift
 import CBridge
 import Foundation
 
@@ -36,8 +37,8 @@ enum XPCService {
 
     /// Load SetappInterface.framework via dlopen.
     ///
-    /// The binary must be compiled with `-rpath` pointing at Setapp's Frameworks
-    /// directory so that @rpath dependencies (AgentHealthMetrics, etc.) resolve.
+    /// FrameworkEnvironment prepares the current user's dyld search paths at
+    /// startup so sibling frameworks and dylibs resolve in downloaded binaries.
     static func loadFramework() throws {
         let path: String = NSString(string: frameworkPath).expandingTildeInPath
         Printer.debug("Loading framework from: \(path)")
